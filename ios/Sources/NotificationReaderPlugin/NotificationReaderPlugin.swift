@@ -10,14 +10,21 @@ public class NotificationReaderPlugin: CAPPlugin, CAPBridgedPlugin {
     public let identifier = "NotificationReaderPlugin"
     public let jsName = "NotificationReader"
     public let pluginMethods: [CAPPluginMethod] = [
-        CAPPluginMethod(name: "echo", returnType: CAPPluginReturnPromise)
+        CAPPluginMethod(name: "getActiveNotifications", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "openAccessSettings", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "isAccessEnabled", returnType: CAPPluginReturnPromise)
     ]
     private let implementation = NotificationReader()
 
-    @objc func echo(_ call: CAPPluginCall) {
-        let value = call.getString("value") ?? ""
-        call.resolve([
-            "value": implementation.echo(value)
-        ])
+    @objc func getActiveNotifications(_ call: CAPPluginCall) {
+        call.reject("Not implemented on iOS. Notification access is an Android-only feature.")
+    }
+
+    @objc func openAccessSettings(_ call: CAPPluginCall) {
+        call.reject("Not implemented on iOS. Notification access is an Android-only feature.")
+    }
+
+    @objc func isAccessEnabled(_ call: CAPPluginCall) {
+        call.reject("Not implemented on iOS. Notification access is an Android-only feature.")
     }
 }
