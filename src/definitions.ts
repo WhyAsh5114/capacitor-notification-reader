@@ -44,7 +44,7 @@ export interface NotificationReaderPlugin {
   /**
    * Opens the system settings page to allow the user to grant notification access
    * to the app.
-   * 
+   *
    * @returns Promise that resolves when settings are opened
    * @throws Error if unable to open settings
    * @since 1.0.0

@@ -5,14 +5,12 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.service.notification.StatusBarNotification;
-
 import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
-
 import java.util.Map;
 
 /**
@@ -42,14 +40,12 @@ public class NotificationReaderPlugin extends Plugin {
 
     /**
      * Checks if the app has been granted notification listener access.
-     * 
+     *
      * @return Object with "enabled" boolean indicating permission status
      */
     @PluginMethod
     public void isAccessEnabled(PluginCall call) {
-        String enabled = Settings.Secure.getString(
-                getContext().getContentResolver(),
-                "enabled_notification_listeners");
+        String enabled = Settings.Secure.getString(getContext().getContentResolver(), "enabled_notification_listeners");
 
         boolean isEnabled = enabled != null && enabled.contains(getContext().getPackageName());
 
@@ -61,7 +57,7 @@ public class NotificationReaderPlugin extends Plugin {
     /**
      * Retrieves all currently active notifications from the notification drawer.
      * Requires notification listener permission to be granted.
-     * 
+     *
      * @return Object containing array of notification items
      */
     @PluginMethod
