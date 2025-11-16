@@ -5,13 +5,14 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.service.notification.StatusBarNotification;
+import androidx.activity.result.ActivityResult;
 import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
+import com.getcapacitor.annotation.ActivityCallback;
 import com.getcapacitor.annotation.CapacitorPlugin;
-import java.util.Map;
 
 /**
  * Capacitor plugin for reading Android notifications.
@@ -19,9 +20,6 @@ import java.util.Map;
  */
 @CapacitorPlugin(name = "NotificationReader")
 public class NotificationReaderPlugin extends Plugin {
-
-    private final NotificationReader implementation = new NotificationReader();
-    private static final int REQUEST_CODE_SETTINGS = 1001;
 
     /**
      * Opens the Android system settings page for notification listener access.
@@ -32,12 +30,15 @@ public class NotificationReaderPlugin extends Plugin {
      */
     @PluginMethod
     public void openAccessSettings(PluginCall call) {
-        try {
-            Intent intent = new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
-            startActivityForResult(call, intent, REQUEST_CODE_SETTINGS);
-        } catch (Exception e) {
-            call.reject("Failed to open settings: " + e.getMessage());
-        }
+        Intent intent = new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
+        startActivityForResult(call, intent, "settingsResult");
+    }
+
+    @ActivityCallback
+    protected void settingsResult(PluginCall call, ActivityResult result) {
+        JSObject ret = new JSObject();
+        ret.put("enabled", isNotificationAccessEnabled());
+        call.resolve(ret);
     }
 
     /**
@@ -47,12 +48,8 @@ public class NotificationReaderPlugin extends Plugin {
      */
     @PluginMethod
     public void isAccessEnabled(PluginCall call) {
-        String enabled = Settings.Secure.getString(getContext().getContentResolver(), "enabled_notification_listeners");
-
-        boolean isEnabled = enabled != null && enabled.contains(getContext().getPackageName());
-
         JSObject ret = new JSObject();
-        ret.put("enabled", isEnabled);
+        ret.put("enabled", isNotificationAccessEnabled());
         call.resolve(ret);
     }
 
@@ -93,30 +90,8 @@ public class NotificationReaderPlugin extends Plugin {
         call.resolve(ret);
     }
 
-    /**
-     * Handles the result from the notification listener settings activity.
-     * Checks the permission status when the user returns from settings.
-     */
-    @Override
-    protected void handleOnActivityResult(int requestCode, int resultCode, Intent data) {
-        super.handleOnActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == REQUEST_CODE_SETTINGS) {
-            PluginCall savedCall = getSavedCall();
-            if (savedCall == null) {
-                return;
-            }
-
-            // Check if permission was granted
-            String enabled = Settings.Secure.getString(
-                getContext().getContentResolver(),
-                "enabled_notification_listeners"
-            );
-            boolean isEnabled = enabled != null && enabled.contains(getContext().getPackageName());
-
-            JSObject ret = new JSObject();
-            ret.put("enabled", isEnabled);
-            savedCall.resolve(ret);
-        }
+    private boolean isNotificationAccessEnabled() {
+        String enabled = Settings.Secure.getString(getContext().getContentResolver(), "enabled_notification_listeners");
+        return enabled != null && enabled.contains(getContext().getPackageName());
     }
 }

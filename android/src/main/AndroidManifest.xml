@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application>
         <service
-            android:name=".NotificationListenerService"
+            android:name="com.whyash5114.plugins.notificationreader.NotificationListenerService"
             android:exported="true"
             android:label="Notification Access"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
