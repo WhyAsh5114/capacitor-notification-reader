@@ -1,5 +1,8 @@
 # capacitor-notification-reader
 
+[![npm version](https://badge.fury.io/js/capacitor-notification-reader.svg)](https://badge.fury.io/js/capacitor-notification-reader)
+[![npm downloads](https://img.shields.io/npm/dm/capacitor-notification-reader.svg)](https://www.npmjs.com/package/capacitor-notification-reader)
+
 Capacitor plugin to read active notifications on Android
 
 ## Install
@@ -91,3 +94,33 @@ Represents a notification item.
 | **`timestamp`** | <code>number</code>         | The timestamp when the notification was posted (in milliseconds). |
 
 </docgen-api>
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to this project.
+
+## Release Process
+
+This package uses [release-it](https://github.com/release-it/release-it) for automated releases. Releases are triggered automatically when commits are pushed to the `main` branch.
+
+### Commit Convention
+
+Follow [Conventional Commits](https://www.conventionalcommits.org/) for your commit messages:
+
+- `feat:` - New features (triggers minor version bump)
+- `fix:` - Bug fixes (triggers patch version bump)
+- `docs:` - Documentation changes
+- `chore:` - Maintenance tasks
+- `BREAKING CHANGE:` - Breaking changes (triggers major version bump)
+
+Example:
+```bash
+git commit -m "feat: add support for notification icons"
+git commit -m "fix: resolve crash when notification has no title"
+```
+
+The CI pipeline will automatically:
+1. Build the package
+2. Determine version bump based on commits
+3. Create a GitHub release with changelog
+4. Publish to npm

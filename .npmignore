@@ -1,17 +1,53 @@
+# Development and CI files
 .github
 .gitignore
 .DS_Store
 .idea
 .vscode
-node_modules
 *.log
-dist
+*.tgz
+.npmrc
+package-lock.json
+
+# Source files (dist/ is published)
+src/
+tsconfig.json
+rollup.config.mjs
+
+# Example and test files
+example-app/
+
+# Build artifacts
+node_modules
 build
 .build
 xcuserdata
 DerivedData
 Pods
 *.sw[op]
-*.tgz
-.npmrc
-package-lock.json
+
+# Android build files
+android/build/
+android/.gradle/
+android/gradle/
+android/gradlew
+android/gradlew.bat
+android/gradle.properties
+android/settings.gradle
+android/proguard-rules.pro
+
+# iOS build files  
+ios/.build
+ios/Pods
+ios/Tests
+
+# Config files
+.swiftlint.yml
+.release-it.json
+.prettierignore
+.prettierrc
+
+# Documentation
+CONTRIBUTING.md
+SECURITY.md
+
