@@ -20,6 +20,8 @@ npx cap sync
 * [`openAccessSettings()`](#openaccesssettings)
 * [`isAccessEnabled()`](#isaccessenabled)
 * [Interfaces](#interfaces)
+* [Type Aliases](#type-aliases)
+* [Enums](#enums)
 
 </docgen-index>
 
@@ -80,21 +82,171 @@ Checks if the app has notification access enabled.
 
 Result returned by getActiveNotifications.
 
-| Prop                | Type                            | Description                    |
-| ------------------- | ------------------------------- | ------------------------------ |
-| **`notifications`** | <code>NotificationItem[]</code> | Array of active notifications. |
+| Prop                | Type                            | Description                                              |
+| ------------------- | ------------------------------- | -------------------------------------------------------- |
+| **`notifications`** | <code>NotificationItem[]</code> | Array of active notifications with type-specific shapes. |
+
+
+#### BigTextNotification
+
+Big text style notification with expanded text content
+
+| Prop          | Type                                                                     | Description                      |
+| ------------- | ------------------------------------------------------------------------ | -------------------------------- |
+| **`style`**   | <code><a href="#notificationstyle">NotificationStyle.BIG_TEXT</a></code> | Notification style template used |
+| **`bigText`** | <code>string \| null</code>                                              | The full expanded text content   |
+
+
+#### BigPictureNotification
+
+Big picture style notification with an image
+
+| Prop                            | Type                                                                        | Description                                   |
+| ------------------------------- | --------------------------------------------------------------------------- | --------------------------------------------- |
+| **`style`**                     | <code><a href="#notificationstyle">NotificationStyle.BIG_PICTURE</a></code> | Notification style template used              |
+| **`bigPicture`**                | <code>string \| null</code>                                                 | Base64-encoded picture shown in expanded view |
+| **`pictureContentDescription`** | <code>string \| null</code>                                                 | Content description for the picture           |
+
+
+#### InboxNotification
+
+Inbox style notification with multiple lines
+
+| Prop             | Type                                                                  | Description                      |
+| ---------------- | --------------------------------------------------------------------- | -------------------------------- |
+| **`style`**      | <code><a href="#notificationstyle">NotificationStyle.INBOX</a></code> | Notification style template used |
+| **`inboxLines`** | <code>string[]</code>                                                 | Array of text lines in the inbox |
+
+
+#### MessagingNotification
+
+Messaging style notification for chat/messaging apps
+
+| Prop                      | Type                                                                          | Description                                        |
+| ------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------- |
+| **`style`**               | <code><a href="#notificationstyle">NotificationStyle.MESSAGING</a></code>     | Notification style template used                   |
+| **`category`**            | <code><a href="#notificationcategory">NotificationCategory.MESSAGE</a></code> | Notification category (call, message, email, etc.) |
+| **`conversationTitle`**   | <code>string \| null</code>                                                   | Conversation title for group chats                 |
+| **`isGroupConversation`** | <code>boolean</code>                                                          | Whether this is a group conversation               |
+| **`messages`**            | <code>NotificationMessage[]</code>                                            | Array of messages in the conversation              |
+
+
+#### NotificationMessage
+
+Message in a messaging-style notification
+
+| Prop            | Type                        | Description              |
+| --------------- | --------------------------- | ------------------------ |
+| **`text`**      | <code>string</code>         | Message text             |
+| **`timestamp`** | <code>number</code>         | Timestamp of the message |
+| **`sender`**    | <code>string \| null</code> | Sender name              |
+
+
+#### ProgressNotification
+
+Progress style notification for downloads, uploads, etc.
+
+| Prop           | Type                                                                           | Description                                        |
+| -------------- | ------------------------------------------------------------------------------ | -------------------------------------------------- |
+| **`category`** | <code><a href="#notificationcategory">NotificationCategory.PROGRESS</a></code> | Notification category (call, message, email, etc.) |
+| **`progress`** | <code><a href="#notificationprogress">NotificationProgress</a></code>          | Progress information                               |
+
+
+#### NotificationProgress
+
+Progress information for notifications with progress bars
+
+| Prop                | Type                 | Description                           |
+| ------------------- | -------------------- | ------------------------------------- |
+| **`current`**       | <code>number</code>  | Current progress value                |
+| **`max`**           | <code>number</code>  | Maximum progress value                |
+| **`indeterminate`** | <code>boolean</code> | Whether the progress is indeterminate |
+
+
+#### CallNotification
+
+Call notification
+
+| Prop             | Type                                                                                                                                               | Description                                        |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| **`category`**   | <code><a href="#notificationcategory">NotificationCategory.CALL</a> \| <a href="#notificationcategory">NotificationCategory.MISSED_CALL</a></code> | Notification category (call, message, email, etc.) |
+| **`callerName`** | <code>string \| null</code>                                                                                                                        | Caller name                                        |
+
+
+#### MediaNotification
+
+Media playback notification
+
+| Prop           | Type                                                                                                                                        | Description                                        |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| **`style`**    | <code><a href="#notificationstyle">NotificationStyle.MEDIA</a> \| <a href="#notificationstyle">NotificationStyle.DECORATED_MEDIA</a></code> | Notification style template used                   |
+| **`category`** | <code><a href="#notificationcategory">NotificationCategory.TRANSPORT</a></code>                                                             | Notification category (call, message, email, etc.) |
+
+
+#### GenericNotification
+
+Generic notification that doesn't fit specific patterns
+
+| Prop        | Type                                                                                                                                           | Description                      |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| **`style`** | <code><a href="#notificationstyle">NotificationStyle.DECORATED_CUSTOM</a> \| <a href="#notificationstyle">NotificationStyle.DEFAULT</a></code> | Notification style template used |
+
+
+### Type Aliases
 
 
 #### NotificationItem
 
-Represents a notification item.
+Union type of all specific notification types.
+Use discriminated union on 'style' and 'category' for type narrowing.
 
-| Prop            | Type                        | Description                                                       |
-| --------------- | --------------------------- | ----------------------------------------------------------------- |
-| **`app`**       | <code>string</code>         | The package name of the app that posted the notification.         |
-| **`title`**     | <code>string \| null</code> | The title of the notification.                                    |
-| **`text`**      | <code>string \| null</code> | The text content of the notification.                             |
-| **`timestamp`** | <code>number</code>         | The timestamp when the notification was posted (in milliseconds). |
+<code><a href="#bigtextnotification">BigTextNotification</a> | <a href="#bigpicturenotification">BigPictureNotification</a> | <a href="#inboxnotification">InboxNotification</a> | <a href="#messagingnotification">MessagingNotification</a> | <a href="#progressnotification">ProgressNotification</a> | <a href="#callnotification">CallNotification</a> | <a href="#medianotification">MediaNotification</a> | <a href="#genericnotification">GenericNotification</a></code>
+
+
+### Enums
+
+
+#### NotificationStyle
+
+| Members                | Value                                        |
+| ---------------------- | -------------------------------------------- |
+| **`BIG_TEXT`**         | <code>'BigTextStyle'</code>                  |
+| **`BIG_PICTURE`**      | <code>'BigPictureStyle'</code>               |
+| **`INBOX`**            | <code>'InboxStyle'</code>                    |
+| **`MESSAGING`**        | <code>'MessagingStyle'</code>                |
+| **`MEDIA`**            | <code>'MediaStyle'</code>                    |
+| **`CALL`**             | <code>'CallStyle'</code>                     |
+| **`DECORATED_CUSTOM`** | <code>'DecoratedCustomViewStyle'</code>      |
+| **`DECORATED_MEDIA`**  | <code>'DecoratedMediaCustomViewStyle'</code> |
+| **`DEFAULT`**          | <code>'default'</code>                       |
+
+
+#### NotificationCategory
+
+| Members                | Value                           |
+| ---------------------- | ------------------------------- |
+| **`ALARM`**            | <code>'alarm'</code>            |
+| **`CALL`**             | <code>'call'</code>             |
+| **`EMAIL`**            | <code>'email'</code>            |
+| **`ERROR`**            | <code>'err'</code>              |
+| **`EVENT`**            | <code>'event'</code>            |
+| **`LOCATION_SHARING`** | <code>'location_sharing'</code> |
+| **`MESSAGE`**          | <code>'msg'</code>              |
+| **`MISSED_CALL`**      | <code>'missed_call'</code>      |
+| **`NAVIGATION`**       | <code>'navigation'</code>       |
+| **`PROGRESS`**         | <code>'progress'</code>         |
+| **`PROMO`**            | <code>'promo'</code>            |
+| **`RECOMMENDATION`**   | <code>'recommendation'</code>   |
+| **`REMINDER`**         | <code>'reminder'</code>         |
+| **`SERVICE`**          | <code>'service'</code>          |
+| **`SOCIAL`**           | <code>'social'</code>           |
+| **`STATUS`**           | <code>'status'</code>           |
+| **`STOPWATCH`**        | <code>'stopwatch'</code>        |
+| **`SYSTEM`**           | <code>'sys'</code>              |
+| **`TRANSPORT`**        | <code>'transport'</code>        |
+| **`VOICEMAIL`**        | <code>'voicemail'</code>        |
+| **`WORKOUT`**          | <code>'workout'</code>          |
+| **`UNKNOWN`**          | <code>'unknown'</code>          |
 
 </docgen-api>
 
