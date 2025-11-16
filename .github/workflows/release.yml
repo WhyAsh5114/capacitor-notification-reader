@@ -5,13 +5,13 @@ on:
     branches:
       - main
 
+permissions:
+  id-token: write  # Required for OIDC
+  contents: write  # Required for release-it to commit and tag
+
 jobs:
   release:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      issues: write
-      pull-requests: write
     
     steps:
       - name: Checkout
@@ -30,6 +30,10 @@ jobs:
         with:
           node-version: 'lts/*'
           cache: 'npm'
+          registry-url: 'https://registry.npmjs.org'
+      
+      - name: Update npm
+        run: npm install -g npm@latest
       
       - name: Install dependencies
         run: npm ci
@@ -42,13 +46,10 @@ jobs:
           git config user.name "${GITHUB_ACTOR}"
           git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
       
-      - name: Setup npm authentication
-        run: npm config set //registry.npmjs.org/:_authToken $NPM_TOKEN
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-      
-      - name: Release
+      - name: Create GitHub Release
         run: npm run release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      
+      - name: Publish to npm
+        run: npm publish --tag latest

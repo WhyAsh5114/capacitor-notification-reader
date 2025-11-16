@@ -101,7 +101,21 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to this 
 
 ## Release Process
 
-This package uses [release-it](https://github.com/release-it/release-it) for automated releases. Releases are triggered automatically when commits are pushed to the `main` branch.
+This package uses [npm Trusted Publishers](https://docs.npmjs.com/trusted-publishers) with OIDC for secure, automated releases. Releases are triggered automatically when commits are pushed to the `main` branch.
+
+### Setup (One-time)
+
+Configure the trusted publisher on npm:
+
+1. Go to your package settings on [npmjs.com](https://www.npmjs.com/package/capacitor-notification-reader)
+2. Navigate to "Publishing access" → "Trusted Publisher"
+3. Select "GitHub Actions"
+4. Configure:
+   - **Organization/User**: `WhyAsh5114`
+   - **Repository**: `capacitor-notification-reader`
+   - **Workflow filename**: `release.yml`
+
+No npm tokens needed! The workflow uses OpenID Connect (OIDC) for authentication.
 
 ### Commit Convention
 
@@ -123,4 +137,4 @@ The CI pipeline will automatically:
 1. Build the package
 2. Determine version bump based on commits
 3. Create a GitHub release with changelog
-4. Publish to npm
+4. Publish to npm with provenance attestation
