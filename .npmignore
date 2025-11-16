@@ -1,0 +1,17 @@
+.github
+.gitignore
+.DS_Store
+.idea
+.vscode
+node_modules
+*.log
+dist
+build
+.build
+xcuserdata
+DerivedData
+Pods
+*.sw[op]
+*.tgz
+.npmrc
+package-lock.json
