@@ -20,5 +20,5 @@ Add any other context or screenshots about the feature request here.
 
 **Platform**
 - [ ] Android
-- [ ] iOS (Note: iOS doesn't support notification reading natively)
+- [ ] iOS (Note: iOS doesn't support notification reading natively, can only suggest better handling methods)
 - [ ] Web
