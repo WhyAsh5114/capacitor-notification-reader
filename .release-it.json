@@ -9,7 +9,8 @@
     }
   },
   "npm": {
-    "publish": false
+    "publish": false,
+    "ignoreVersion": true
   },
   "git": {
     "commit": true,
