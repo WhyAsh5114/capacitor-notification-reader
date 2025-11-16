@@ -44,11 +44,14 @@ Gets all active notifications from the notification listener service.
 ### openAccessSettings()
 
 ```typescript
-openAccessSettings() => Promise<void>
+openAccessSettings() => Promise<{ enabled: boolean; }>
 ```
 
 Opens the system settings page to allow the user to grant notification access
-to the app.
+to the app. The promise resolves when the user returns from settings with
+the current permission status.
+
+**Returns:** <code>Promise&lt;{ enabled: boolean; }&gt;</code>
 
 **Since:** 1.0.0
 

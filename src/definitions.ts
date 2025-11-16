@@ -43,14 +43,15 @@ export interface NotificationReaderPlugin {
 
   /**
    * Opens the system settings page to allow the user to grant notification access
-   * to the app.
+   * to the app. The promise resolves when the user returns from settings with
+   * the current permission status.
    *
-   * @returns Promise that resolves when settings are opened
+   * @returns Promise resolving with an object indicating if permission was granted
    * @throws Error if unable to open settings
    * @since 1.0.0
    * @platform Android
    */
-  openAccessSettings(): Promise<void>;
+  openAccessSettings(): Promise<{ enabled: boolean }>;
 
   /**
    * Checks if the app has notification access enabled.

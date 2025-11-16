@@ -6,7 +6,7 @@ export class NotificationReaderWeb extends WebPlugin implements NotificationRead
   async getActiveNotifications(): Promise<GetActiveNotificationsResult> {
     throw this.unimplemented('Not implemented on web.');
   }
-  async openAccessSettings(): Promise<void> {
+  async openAccessSettings(): Promise<{ enabled: boolean }> {
     throw this.unimplemented('Not implemented on web.');
   }
   async isAccessEnabled(): Promise<{ enabled: boolean }> {

@@ -21,18 +21,20 @@ import java.util.Map;
 public class NotificationReaderPlugin extends Plugin {
 
     private final NotificationReader implementation = new NotificationReader();
+    private static final int REQUEST_CODE_SETTINGS = 1001;
 
     /**
      * Opens the Android system settings page for notification listener access.
      * Users must manually enable notification access for the app from this settings page.
+     * The method waits for the user to return and checks if permission was granted.
+     *
+     * @return Object with "enabled" boolean indicating whether permission was granted
      */
     @PluginMethod
     public void openAccessSettings(PluginCall call) {
         try {
-            Intent intent = new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            getContext().startActivity(intent);
-            call.resolve();
+            Intent intent = new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
+            startActivityForResult(call, intent, REQUEST_CODE_SETTINGS);
         } catch (Exception e) {
             call.reject("Failed to open settings: " + e.getMessage());
         }
@@ -89,5 +91,32 @@ public class NotificationReaderPlugin extends Plugin {
         ret.put("notifications", arr);
 
         call.resolve(ret);
+    }
+
+    /**
+     * Handles the result from the notification listener settings activity.
+     * Checks the permission status when the user returns from settings.
+     */
+    @Override
+    protected void handleOnActivityResult(int requestCode, int resultCode, Intent data) {
+        super.handleOnActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == REQUEST_CODE_SETTINGS) {
+            PluginCall savedCall = getSavedCall();
+            if (savedCall == null) {
+                return;
+            }
+
+            // Check if permission was granted
+            String enabled = Settings.Secure.getString(
+                getContext().getContentResolver(),
+                "enabled_notification_listeners"
+            );
+            boolean isEnabled = enabled != null && enabled.contains(getContext().getPackageName());
+
+            JSObject ret = new JSObject();
+            ret.put("enabled", isEnabled);
+            savedCall.resolve(ret);
+        }
     }
 }
