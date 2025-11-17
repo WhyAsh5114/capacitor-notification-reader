@@ -2,14 +2,58 @@
 
 This plugin provides comprehensive type safety through discriminated unions. TypeScript will automatically narrow the notification type based on the `style` and `category` fields.
 
+## Overview: Active vs. Stored Notifications
+
+This plugin offers two ways to access notifications:
+
+1. **Active Notifications** (`getActiveNotifications()`): Returns notifications currently visible in the Android notification drawer. These disappear when dismissed by the user.
+
+2. **Stored Notifications** (`getNotifications()`): Returns notifications from the RoomDB database. These are automatically saved when posted and persist even after:
+   - The user dismisses the notification
+   - Your app is closed or terminated
+   - The device is rebooted
+
+**Key Benefit**: The NotificationListenerService runs in the background and stores notifications in the database even when your app isn't running. This means you can retrieve a complete history of notifications that occurred while your app was closed.
+
 ## Basic Usage
+
+### Get Active Notifications
 
 ```typescript
 import { NotificationReader, NotificationItem, NotificationStyle, NotificationCategory } from 'capacitor-notification-reader';
 
+// Get currently active notifications from the notification drawer
 const { notifications } = await NotificationReader.getActiveNotifications();
 
 notifications.forEach((notification) => {
+  console.log(`${notification.app}: ${notification.title}`);
+  console.log(`Category: ${notification.category}, Style: ${notification.style}`);
+});
+```
+
+### Get Notifications from Database (with Pagination)
+
+```typescript
+import { NotificationReader } from 'capacitor-notification-reader';
+
+// Get the first 20 notifications from the database
+const { notifications } = await NotificationReader.getNotifications({
+  afterId: 0,
+  limit: 20
+});
+
+// Pagination: get the next batch
+if (notifications.length > 0) {
+  const lastId = notifications[notifications.length - 1].id;
+  const { notifications: nextBatch } = await NotificationReader.getNotifications({
+    afterId: lastId,
+    limit: 20
+  });
+}
+
+// Process notifications
+notifications.forEach((notification) => {
+  console.log(`ID: ${notification.id}`);
   console.log(`${notification.app}: ${notification.title}`);
   console.log(`Category: ${notification.category}, Style: ${notification.style}`);
 });
@@ -141,6 +185,8 @@ notifications.forEach((notification) => {
 
 ## React Component Example
 
+### Active Notifications
+
 ```typescript
 import React, { useState, useEffect } from 'react';
 import { NotificationReader, NotificationItem, NotificationStyle } from 'capacitor-notification-reader';
@@ -213,6 +259,111 @@ const NotificationList: React.FC = () => {
 };
 
 export default NotificationList;
+```
+
+### Real-time Notification Listener
+
+```typescript
+import React, { useEffect } from 'react';
+import { NotificationReader, NotificationItem } from 'capacitor-notification-reader';
+import { PluginListenerHandle } from '@capacitor/core';
+
+const RealtimeNotifications: React.FC = () => {
+  useEffect(() => {
+    let listener: PluginListenerHandle;
+    
+    const setupListener = async () => {
+      // Listen for notifications posted in real-time
+      // Note: Notifications are still stored in DB even if app is closed
+      listener = await NotificationReader.addListener(
+        'notificationPosted',
+        (notification: NotificationItem) => {
+          console.log('New notification received:', notification.title);
+          console.log('Stored in DB with ID:', notification.id);
+          
+          // Update your UI or trigger actions
+          handleNewNotification(notification);
+        }
+      );
+    };
+    
+    setupListener();
+    
+    return () => {
+      listener?.remove();
+    };
+  }, []);
+  
+  const handleNewNotification = (notification: NotificationItem) => {
+    // Your custom logic here
+    // The notification is already saved to the database automatically
+  };
+  
+  return <div>Listening for notifications...</div>;
+};
+
+export default RealtimeNotifications;
+```
+
+### Database Notifications with Pagination
+
+```typescript
+import React, { useState, useEffect } from 'react';
+import { NotificationReader, NotificationItem } from 'capacitor-notification-reader';
+
+const NotificationHistory: React.FC = () => {
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  
+  const loadMore = async () => {
+    if (loading || !hasMore) return;
+    
+    setLoading(true);
+    try {
+      const lastId = notifications.length > 0 
+        ? notifications[notifications.length - 1].id 
+        : 0;
+      
+      const { notifications: newNotifications } = await NotificationReader.getNotifications({
+        afterId: lastId,
+        limit: 20
+      });
+      
+      if (newNotifications.length === 0) {
+        setHasMore(false);
+      } else {
+        setNotifications([...notifications, ...newNotifications]);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  useEffect(() => {
+    loadMore();
+  }, []);
+  
+  return (
+    <div className="notification-history">
+      {notifications.map((notification) => (
+        <div key={notification.id} className="notification-item">
+          <h3>{notification.title}</h3>
+          <p>{notification.text}</p>
+          <small>{new Date(notification.timestamp).toLocaleString()}</small>
+        </div>
+      ))}
+      
+      {hasMore && (
+        <button onClick={loadMore} disabled={loading}>
+          {loading ? 'Loading...' : 'Load More'}
+        </button>
+      )}
+    </div>
+  );
+};
+
+export default NotificationHistory;
 ```
 
 ## Grouping Notifications

@@ -3,7 +3,16 @@
 [![npm version](https://badge.fury.io/js/capacitor-notification-reader.svg)](https://badge.fury.io/js/capacitor-notification-reader)
 [![npm downloads](https://img.shields.io/npm/dm/capacitor-notification-reader.svg)](https://www.npmjs.com/package/capacitor-notification-reader)
 
-Capacitor plugin to read active notifications on Android
+Capacitor plugin to read active notifications on Android with persistent storage.
+
+## Features
+
+- **Read Active Notifications**: Access all currently active notifications from the notification drawer
+- **Persistent Storage**: Notifications are automatically stored in a RoomDB database when posted
+- **Background Collection**: Notifications are captured even when your app isn't running
+- **Pagination Support**: Efficiently retrieve stored notifications with pagination
+- **Comprehensive Type Safety**: Full TypeScript support with discriminated unions
+- **Rich Notification Data**: Access notification styles, actions, icons, and metadata
 
 ## Install
 
@@ -12,6 +21,97 @@ npm install capacitor-notification-reader
 npx cap sync
 ```
 
+## How It Works
+
+### Persistent Notification Storage
+
+This plugin uses Android's NotificationListenerService combined with RoomDB to provide robust notification tracking:
+
+1. **Notification Listener Service**: Once you grant notification access, the Android NotificationListenerService runs in the background and receives all notifications system-wide.
+
+2. **Automatic Storage**: When a notification is posted, the service automatically:
+   - Parses all notification data (title, text, style, actions, icons, etc.)
+   - Stores it in a local RoomDB database
+   - Notifies your app via the `notificationPosted` event listener (if the app is running)
+
+3. **Background Operation**: The listener service operates independently of your app:
+   - Notifications are captured even when your app is closed
+   - Data persists across app restarts
+   - No battery-intensive polling required
+
+4. **Dual Access Methods**:
+   - `getActiveNotifications()`: Returns currently visible notifications from the notification drawer
+   - `getNotifications()`: Retrieves stored notifications from the database with pagination support
+
+### Database Schema
+
+The RoomDB database stores comprehensive notification data including:
+- Basic fields: package name, title, text, timestamp
+- Icons: small icon, large icon, app icon (all as base64)
+- Metadata: category, style, channel ID, group info, priority
+- Style-specific data: big text, big picture, inbox lines, messaging conversations
+- Action buttons with inline reply support
+- Progress information for download/upload notifications
+- Call-style specific data (caller name)
+
+## Usage Examples
+
+### Listen for Real-time Notifications
+
+```typescript
+import { NotificationReader } from 'capacitor-notification-reader';
+
+// Listen for notifications as they are posted
+await NotificationReader.addListener('notificationPosted', (notification) => {
+  console.log('New notification:', notification.title);
+  console.log('Stored in DB with ID:', notification.id);
+  // The notification is automatically saved to the database
+});
+```
+
+### Retrieve Stored Notifications with Pagination
+
+```typescript
+import { NotificationReader } from 'capacitor-notification-reader';
+
+// Get first batch
+const { notifications } = await NotificationReader.getNotifications({
+  afterId: 0,
+  limit: 20
+});
+
+// Get next batch
+if (notifications.length > 0) {
+  const lastId = notifications[notifications.length - 1].id;
+  const { notifications: nextBatch } = await NotificationReader.getNotifications({
+    afterId: lastId,
+    limit: 20
+  });
+}
+```
+
+### Type-Safe Notification Handling
+
+```typescript
+import { NotificationStyle, NotificationCategory } from 'capacitor-notification-reader';
+
+notifications.forEach((notification) => {
+  // TypeScript automatically narrows the type
+  switch (notification.style) {
+    case NotificationStyle.MESSAGING:
+      // notification is MessagingNotification
+      console.log('Messages:', notification.messages);
+      break;
+    case NotificationStyle.BIG_PICTURE:
+      // notification is BigPictureNotification
+      console.log('Picture:', notification.bigPicture);
+      break;
+  }
+});
+```
+
+For more detailed examples, see [TYPE_USAGE_EXAMPLES.md](TYPE_USAGE_EXAMPLES.md).
+
 ## API
 
 <docgen-index>
@@ -19,6 +119,8 @@ npx cap sync
 * [`getActiveNotifications()`](#getactivenotifications)
 * [`openAccessSettings()`](#openaccesssettings)
 * [`isAccessEnabled()`](#isaccessenabled)
+* [`getNotifications(...)`](#getnotifications)
+* [`addListener('notificationPosted', ...)`](#addlistenernotificationposted-)
 * [Interfaces](#interfaces)
 * [Type Aliases](#type-aliases)
 * [Enums](#enums)
@@ -69,6 +171,53 @@ isAccessEnabled() => Promise<{ enabled: boolean; }>
 Checks if the app has notification access enabled.
 
 **Returns:** <code>Promise&lt;{ enabled: boolean; }&gt;</code>
+
+**Since:** 1.0.0
+
+--------------------
+
+
+### getNotifications(...)
+
+```typescript
+getNotifications(options?: GetNotificationsOptions | undefined) => Promise<GetNotificationsResult>
+```
+
+Retrieves notifications from the database with pagination support.
+Notifications are stored in the database when they are posted and can be
+retrieved later even after they are dismissed from the notification drawer.
+
+| Param         | Type                                                                        | Description                              |
+| ------------- | --------------------------------------------------------------------------- | ---------------------------------------- |
+| **`options`** | <code><a href="#getnotificationsoptions">GetNotificationsOptions</a></code> | - Pagination options (afterId and limit) |
+
+**Returns:** <code>Promise&lt;<a href="#getnotificationsresult">GetNotificationsResult</a>&gt;</code>
+
+**Since:** 1.0.0
+
+--------------------
+
+
+### addListener('notificationPosted', ...)
+
+```typescript
+addListener(eventName: 'notificationPosted', listenerFunc: (notification: NotificationItem) => void) => Promise<PluginListenerHandle>
+```
+
+Listens for notifications as they are posted in real-time. The listener receives 
+notification data immediately when a notification is posted by any app on the device.
+
+**Note:** Notifications are automatically stored in the database regardless of whether 
+you have an active listener. This listener is only needed for real-time updates when 
+your app is running. You can retrieve all notifications (including those posted while 
+your app was closed) using `getNotifications()`.
+
+| Param              | Type                                                               | Description                                                          |
+| ------------------ | ------------------------------------------------------------------ | -------------------------------------------------------------------- |
+| **`eventName`**    | <code>'notificationPosted'</code>                                  | The name of the event to listen for                                  |
+| **`listenerFunc`** | <code>(notification: <a href="#notificationitem">NotificationItem</a>) =&gt; void</code> | The callback function that receives the notification when it's posted |
+
+**Returns:** <code>Promise&lt;PluginListenerHandle&gt;</code> - A handle to remove the listener
 
 **Since:** 1.0.0
 
@@ -190,6 +339,25 @@ Generic notification that doesn't fit specific patterns
 | Prop        | Type                                                                                                                                           | Description                      |
 | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
 | **`style`** | <code><a href="#notificationstyle">NotificationStyle.DECORATED_CUSTOM</a> \| <a href="#notificationstyle">NotificationStyle.DEFAULT</a></code> | Notification style template used |
+
+
+#### GetNotificationsResult
+
+Result returned by getNotifications.
+
+| Prop                | Type                            | Description                               |
+| ------------------- | ------------------------------- | ----------------------------------------- |
+| **`notifications`** | <code>NotificationItem[]</code> | Array of notifications from the database. |
+
+
+#### GetNotificationsOptions
+
+Options for getNotifications.
+
+| Prop          | Type                | Description                                                                                                         | Default         |
+| ------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------- | --------------- |
+| **`afterId`** | <code>number</code> | Retrieve notifications with IDs greater than this value. Use for pagination to get the next batch of notifications. | <code>0</code>  |
+| **`limit`**   | <code>number</code> | Maximum number of notifications to retrieve.                                                                        | <code>10</code> |
 
 
 ### Type Aliases

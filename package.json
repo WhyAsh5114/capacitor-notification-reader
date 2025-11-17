@@ -1,7 +1,7 @@
 {
   "name": "capacitor-notification-reader",
   "version": "0.2.1",
-  "description": "Capacitor plugin to read active notifications on Android",
+  "description": "Capacitor plugin to read and persist Android notifications with RoomDB storage",
   "main": "dist/plugin.cjs.js",
   "module": "dist/esm/index.js",
   "types": "dist/esm/index.d.ts",
@@ -33,7 +33,11 @@
     "notification",
     "android",
     "notification-listener",
-    "active-notifications"
+    "active-notifications",
+    "persistent-storage",
+    "roomdb",
+    "notification-history",
+    "background-service"
   ],
   "scripts": {
     "verify": "npm run verify:ios && npm run verify:android && npm run verify:web",
