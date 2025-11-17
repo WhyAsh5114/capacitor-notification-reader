@@ -1,6 +1,6 @@
 import { WebPlugin } from '@capacitor/core';
 
-import type { GetActiveNotificationsResult, NotificationReaderPlugin } from './definitions';
+import type { GetActiveNotificationsResult, GetNotificationsOptions, GetNotificationsResult, NotificationReaderPlugin } from './definitions';
 
 export class NotificationReaderWeb extends WebPlugin implements NotificationReaderPlugin {
   async getActiveNotifications(): Promise<GetActiveNotificationsResult> {
@@ -10,6 +10,9 @@ export class NotificationReaderWeb extends WebPlugin implements NotificationRead
     throw this.unimplemented('Not implemented on web.');
   }
   async isAccessEnabled(): Promise<{ enabled: boolean }> {
+    throw this.unimplemented('Not implemented on web.');
+  }
+  async getNotifications(_options?: GetNotificationsOptions): Promise<GetNotificationsResult> {
     throw this.unimplemented('Not implemented on web.');
   }
 }

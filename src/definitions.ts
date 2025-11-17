@@ -1,3 +1,5 @@
+import { Plugin } from '@capacitor/core';
+
 /**
  * Android notification categories
  */
@@ -23,7 +25,7 @@ export enum NotificationCategory {
   TRANSPORT = 'transport',
   VOICEMAIL = 'voicemail',
   WORKOUT = 'workout',
-  UNKNOWN = 'unknown'
+  UNKNOWN = 'unknown',
 }
 
 /**
@@ -38,7 +40,7 @@ export enum NotificationStyle {
   CALL = 'CallStyle',
   DECORATED_CUSTOM = 'DecoratedCustomViewStyle',
   DECORATED_MEDIA = 'DecoratedMediaCustomViewStyle',
-  DEFAULT = 'default'
+  DEFAULT = 'default',
 }
 
 /**
@@ -99,6 +101,10 @@ export interface NotificationMessage {
  * Base notification properties common to all notifications
  */
 export interface BaseNotification {
+  /**
+   * The unique database ID of the notification.
+   */
+  id: number;
   /**
    * The package name of the app that posted the notification.
    */
@@ -303,7 +309,34 @@ export interface GetActiveNotificationsResult {
   notifications: NotificationItem[];
 }
 
-export interface NotificationReaderPlugin {
+/**
+ * Options for getNotifications.
+ */
+export interface GetNotificationsOptions {
+  /**
+   * Retrieve notifications with IDs greater than this value.
+   * Use for pagination to get the next batch of notifications.
+   * @default 0
+   */
+  afterId?: number;
+  /**
+   * Maximum number of notifications to retrieve.
+   * @default 10
+   */
+  limit?: number;
+}
+
+/**
+ * Result returned by getNotifications.
+ */
+export interface GetNotificationsResult {
+  /**
+   * Array of notifications from the database.
+   */
+  notifications: NotificationItem[];
+}
+
+export interface NotificationReaderPlugin extends Plugin {
   /**
    * Gets all active notifications from the notification listener service.
    *
@@ -334,4 +367,16 @@ export interface NotificationReaderPlugin {
    * @platform Android
    */
   isAccessEnabled(): Promise<{ enabled: boolean }>;
+
+  /**
+   * Retrieves notifications from the database with pagination support.
+   * Notifications are stored in the database when they are posted and can be
+   * retrieved later even after they are dismissed from the notification drawer.
+   *
+   * @param options - Pagination options (afterId and limit)
+   * @returns Promise resolving with the list of notifications from the database
+   * @since 1.0.0
+   * @platform Android
+   */
+  getNotifications(options?: GetNotificationsOptions): Promise<GetNotificationsResult>;
 }
