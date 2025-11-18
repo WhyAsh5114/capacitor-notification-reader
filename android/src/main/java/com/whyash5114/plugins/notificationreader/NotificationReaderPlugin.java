@@ -109,11 +109,16 @@ public class NotificationReaderPlugin extends Plugin {
 
     @PluginMethod
     public void getNotifications(PluginCall call) {
-        Integer afterId = call.getInt("afterId", 0);
+        Long cursor = call.getLong("cursor");
         Integer limit = call.getInt("limit", 10);
 
         new Thread(() -> {
-            List<NotificationEntity> entities = NotificationDatabase.getDatabase(getContext()).notificationDao().getNotifications(afterId, limit);
+            List<NotificationEntity> entities;
+            if (cursor != null) {
+                entities = NotificationDatabase.getDatabase(getContext()).notificationDao().getNotifications(cursor, limit);
+            } else {
+                entities = NotificationDatabase.getDatabase(getContext()).notificationDao().getNotifications(limit);
+            }
             JSArray notificationArray = new JSArray();
             for (NotificationEntity entity : entities) {
                 notificationArray.put(notificationEntityToJSObject(entity));

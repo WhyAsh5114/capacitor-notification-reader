@@ -1,13 +1,17 @@
 
 package com.whyash5114.plugins.notificationreader.db;
 
+import androidx.annotation.NonNull;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
+import java.util.UUID;
+
 @Entity(tableName = "notifications")
 public class NotificationEntity {
-    @PrimaryKey(autoGenerate = true)
-    public int id;
+    @PrimaryKey
+    @NonNull
+    public String id;
 
     // Base notification fields
     public String packageName;
@@ -44,4 +48,8 @@ public class NotificationEntity {
     public int progressMax;
     public boolean progressIndeterminate;
     public String callerName; // For CallStyle
+
+    public NotificationEntity() {
+        this.id = UUID.randomUUID().toString();
+    }
 }

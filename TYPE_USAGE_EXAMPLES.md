@@ -36,24 +36,23 @@ notifications.forEach((notification) => {
 ```typescript
 import { NotificationReader } from 'capacitor-notification-reader';
 
-// Get the first 20 notifications from the database
+// Get the first 20 notifications from the database (most recent first)
 const { notifications } = await NotificationReader.getNotifications({
-  afterId: 0,
   limit: 20
 });
 
-// Pagination: get the next batch
+// Pagination: get the next batch using cursor (timestamp-based)
 if (notifications.length > 0) {
-  const lastId = notifications[notifications.length - 1].id;
+  const lastTimestamp = notifications[notifications.length - 1].timestamp;
   const { notifications: nextBatch } = await NotificationReader.getNotifications({
-    afterId: lastId,
+    cursor: lastTimestamp,
     limit: 20
   });
 }
 
 // Process notifications
 notifications.forEach((notification) => {
-  console.log(`ID: ${notification.id}`);
+  console.log(`ID: ${notification.id}`); // UUID
   console.log(`${notification.app}: ${notification.title}`);
   console.log(`Category: ${notification.category}, Style: ${notification.style}`);
 });
@@ -321,12 +320,12 @@ const NotificationHistory: React.FC = () => {
     
     setLoading(true);
     try {
-      const lastId = notifications.length > 0 
-        ? notifications[notifications.length - 1].id 
-        : 0;
+      const cursor = notifications.length > 0 
+        ? notifications[notifications.length - 1].timestamp 
+        : undefined;
       
       const { notifications: newNotifications } = await NotificationReader.getNotifications({
-        afterId: lastId,
+        cursor,
         limit: 20
       });
       

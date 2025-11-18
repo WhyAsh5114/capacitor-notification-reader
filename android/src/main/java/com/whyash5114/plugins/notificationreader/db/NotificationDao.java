@@ -11,6 +11,9 @@ public interface NotificationDao {
     @Insert
     void insert(NotificationEntity notification);
 
-    @Query("SELECT * FROM notifications WHERE id > :afterId ORDER BY id ASC LIMIT :limit")
-    List<NotificationEntity> getNotifications(int afterId, int limit);
+    @Query("SELECT * FROM notifications WHERE postTime < :cursor ORDER BY postTime DESC LIMIT :limit")
+    List<NotificationEntity> getNotifications(long cursor, int limit);
+
+    @Query("SELECT * FROM notifications ORDER BY postTime DESC LIMIT :limit")
+    List<NotificationEntity> getNotifications(int limit);
 }

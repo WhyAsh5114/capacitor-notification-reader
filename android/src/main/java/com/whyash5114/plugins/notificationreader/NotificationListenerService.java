@@ -21,6 +21,16 @@ public class NotificationListenerService extends android.service.notification.No
     public void onListenerConnected() {
         super.onListenerConnected();
         NotificationServiceHolder.setService(this);
+
+        // Process existing notifications
+        new Thread(() -> {
+            for (StatusBarNotification sbn : getActiveNotifications()) {
+                final NotificationEntity entity = NotificationParser.parse(getApplicationContext(), sbn);
+                if (entity != null) {
+                    NotificationDatabase.getDatabase(getApplicationContext()).notificationDao().insert(entity);
+                }
+            }
+        }).start();
     }
 
     /**

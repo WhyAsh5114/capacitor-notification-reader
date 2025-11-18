@@ -46,6 +46,7 @@ This plugin uses Android's NotificationListenerService combined with RoomDB to p
 ### Database Schema
 
 The RoomDB database stores comprehensive notification data including:
+- Primary key: UUID (automatically generated for each notification)
 - Basic fields: package name, title, text, timestamp
 - Icons: small icon, large icon, app icon (all as base64)
 - Metadata: category, style, channel ID, group info, priority
@@ -53,6 +54,8 @@ The RoomDB database stores comprehensive notification data including:
 - Action buttons with inline reply support
 - Progress information for download/upload notifications
 - Call-style specific data (caller name)
+
+**Note:** When the NotificationListenerService first connects (e.g., when your app is installed or after device reboot), it automatically loads all currently active notifications into the database. This ensures you have a complete history from the moment the service starts.
 
 ## Usage Examples
 
@@ -74,17 +77,16 @@ await NotificationReader.addListener('notificationPosted', (notification) => {
 ```typescript
 import { NotificationReader } from 'capacitor-notification-reader';
 
-// Get first batch
+// Get first batch (most recent notifications)
 const { notifications } = await NotificationReader.getNotifications({
-  afterId: 0,
   limit: 20
 });
 
-// Get next batch
+// Get next batch using cursor (timestamp-based pagination)
 if (notifications.length > 0) {
-  const lastId = notifications[notifications.length - 1].id;
+  const lastTimestamp = notifications[notifications.length - 1].timestamp;
   const { notifications: nextBatch } = await NotificationReader.getNotifications({
-    afterId: lastId,
+    cursor: lastTimestamp,
     limit: 20
   });
 }
@@ -120,7 +122,6 @@ For more detailed examples, see [TYPE_USAGE_EXAMPLES.md](TYPE_USAGE_EXAMPLES.md)
 * [`openAccessSettings()`](#openaccesssettings)
 * [`isAccessEnabled()`](#isaccessenabled)
 * [`getNotifications(...)`](#getnotifications)
-* [`addListener('notificationPosted', ...)`](#addlistenernotificationposted-)
 * [Interfaces](#interfaces)
 * [Type Aliases](#type-aliases)
 * [Enums](#enums)
@@ -192,32 +193,6 @@ retrieved later even after they are dismissed from the notification drawer.
 | **`options`** | <code><a href="#getnotificationsoptions">GetNotificationsOptions</a></code> | - Pagination options (afterId and limit) |
 
 **Returns:** <code>Promise&lt;<a href="#getnotificationsresult">GetNotificationsResult</a>&gt;</code>
-
-**Since:** 1.0.0
-
---------------------
-
-
-### addListener('notificationPosted', ...)
-
-```typescript
-addListener(eventName: 'notificationPosted', listenerFunc: (notification: NotificationItem) => void) => Promise<PluginListenerHandle>
-```
-
-Listens for notifications as they are posted in real-time. The listener receives 
-notification data immediately when a notification is posted by any app on the device.
-
-**Note:** Notifications are automatically stored in the database regardless of whether 
-you have an active listener. This listener is only needed for real-time updates when 
-your app is running. You can retrieve all notifications (including those posted while 
-your app was closed) using `getNotifications()`.
-
-| Param              | Type                                                               | Description                                                          |
-| ------------------ | ------------------------------------------------------------------ | -------------------------------------------------------------------- |
-| **`eventName`**    | <code>'notificationPosted'</code>                                  | The name of the event to listen for                                  |
-| **`listenerFunc`** | <code>(notification: <a href="#notificationitem">NotificationItem</a>) =&gt; void</code> | The callback function that receives the notification when it's posted |
-
-**Returns:** <code>Promise&lt;PluginListenerHandle&gt;</code> - A handle to remove the listener
 
 **Since:** 1.0.0
 
@@ -354,10 +329,10 @@ Result returned by getNotifications.
 
 Options for getNotifications.
 
-| Prop          | Type                | Description                                                                                                         | Default         |
-| ------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------- | --------------- |
-| **`afterId`** | <code>number</code> | Retrieve notifications with IDs greater than this value. Use for pagination to get the next batch of notifications. | <code>0</code>  |
-| **`limit`**   | <code>number</code> | Maximum number of notifications to retrieve.                                                                        | <code>10</code> |
+| Prop         | Type                | Description                                                                                                                                                                                                                           | Default         |
+| ------------ | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
+| **`cursor`** | <code>number</code> | Retrieve notifications with timestamps before this value (cursor-based pagination). Use the timestamp of the last notification from the previous batch to get the next batch. If not provided, returns the most recent notifications. |                 |
+| **`limit`**  | <code>number</code> | Maximum number of notifications to retrieve.                                                                                                                                                                                          | <code>10</code> |
 
 
 ### Type Aliases

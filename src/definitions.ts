@@ -102,9 +102,9 @@ export interface NotificationMessage {
  */
 export interface BaseNotification {
   /**
-   * The unique database ID of the notification.
+   * The unique database ID of the notification (UUID).
    */
-  id: number;
+  id: string;
   /**
    * The package name of the app that posted the notification.
    */
@@ -314,11 +314,11 @@ export interface GetActiveNotificationsResult {
  */
 export interface GetNotificationsOptions {
   /**
-   * Retrieve notifications with IDs greater than this value.
-   * Use for pagination to get the next batch of notifications.
-   * @default 0
+   * Retrieve notifications with timestamps before this value (cursor-based pagination).
+   * Use the timestamp of the last notification from the previous batch to get the next batch.
+   * If not provided, returns the most recent notifications.
    */
-  afterId?: number;
+  cursor?: number;
   /**
    * Maximum number of notifications to retrieve.
    * @default 10
