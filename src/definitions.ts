@@ -54,7 +54,7 @@ export interface NotificationAction {
   /**
    * Base64-encoded icon for the action (if available)
    */
-  icon?: string | null;
+  icon?: string;
   /**
    * Whether this action allows remote input (for inline replies)
    */
@@ -94,7 +94,7 @@ export interface NotificationMessage {
   /**
    * Sender name
    */
-  sender: string | null;
+  sender?: string;
 }
 
 /**
@@ -106,17 +106,21 @@ export interface BaseNotification {
    */
   id: string;
   /**
+   * The human-readable name of the app that posted the notification.
+   */
+  appName: string;
+  /**
    * The package name of the app that posted the notification.
    */
-  app: string;
+  packageName: string;
   /**
    * The title of the notification.
    */
-  title: string | null;
+  title?: string;
   /**
    * The text content of the notification.
    */
-  text: string | null;
+  text?: string;
   /**
    * The timestamp when the notification was posted (in milliseconds).
    */
@@ -124,19 +128,19 @@ export interface BaseNotification {
   /**
    * Base64-encoded PNG of the notification's small icon (status bar icon).
    */
-  smallIcon?: string | null;
+  smallIcon?: string;
   /**
    * Base64-encoded PNG of the notification's large icon.
    */
-  largeIcon?: string | null;
+  largeIcon?: string;
   /**
    * Base64-encoded PNG of the app's launcher icon.
    */
-  appIcon?: string | null;
+  appIcon?: string;
   /**
    * Notification category (call, message, email, etc.)
    */
-  category: NotificationCategory;
+  category?: string;
   /**
    * Notification style template used
    */
@@ -144,19 +148,19 @@ export interface BaseNotification {
   /**
    * Sub-text shown below the main text
    */
-  subText?: string | null;
+  subText?: string;
   /**
    * Additional info text
    */
-  infoText?: string | null;
+  infoText?: string;
   /**
    * Summary text for expanded notifications
    */
-  summaryText?: string | null;
+  summaryText?: string;
   /**
    * Group key for grouped notifications
    */
-  group?: string | null;
+  group?: string;
   /**
    * Whether this is a group summary notification
    */
@@ -164,9 +168,9 @@ export interface BaseNotification {
   /**
    * Notification channel ID (Android 8+)
    */
-  channelId?: string | null;
+  channelId?: string;
   /**
-   * Action buttons available on the notification
+   * Action buttons available on the notification (always an array, may be empty)
    */
   actions: NotificationAction[];
   /**
@@ -188,7 +192,7 @@ export interface BaseNotification {
   /**
    * Number badge (e.g., unread count)
    */
-  number?: number;
+  number: number;
 }
 
 /**
@@ -199,7 +203,7 @@ export interface BigTextNotification extends BaseNotification {
   /**
    * The full expanded text content
    */
-  bigText?: string | null;
+  bigText?: string;
 }
 
 /**
@@ -210,11 +214,11 @@ export interface BigPictureNotification extends BaseNotification {
   /**
    * Base64-encoded picture shown in expanded view
    */
-  bigPicture?: string | null;
+  bigPicture?: string;
   /**
    * Content description for the picture
    */
-  pictureContentDescription?: string | null;
+  pictureContentDescription?: string;
 }
 
 /**
@@ -237,7 +241,7 @@ export interface MessagingNotification extends BaseNotification {
   /**
    * Conversation title for group chats
    */
-  conversationTitle?: string | null;
+  conversationTitle?: string;
   /**
    * Whether this is a group conversation
    */
@@ -252,6 +256,7 @@ export interface MessagingNotification extends BaseNotification {
  * Progress style notification for downloads, uploads, etc.
  */
 export interface ProgressNotification extends BaseNotification {
+  style: NotificationStyle.DEFAULT;
   category: NotificationCategory.PROGRESS;
   /**
    * Progress information
@@ -263,11 +268,12 @@ export interface ProgressNotification extends BaseNotification {
  * Call notification
  */
 export interface CallNotification extends BaseNotification {
+  style: NotificationStyle.CALL | NotificationStyle.DEFAULT;
   category: NotificationCategory.CALL | NotificationCategory.MISSED_CALL;
   /**
    * Caller name
    */
-  callerName?: string | null;
+  callerName?: string;
 }
 
 /**
@@ -288,6 +294,15 @@ export interface GenericNotification extends BaseNotification {
 /**
  * Union type of all specific notification types.
  * Use discriminated union on 'style' and 'category' for type narrowing.
+ * 
+ * Type narrowing examples:
+ * - For BigTextNotification: check `notification.style === NotificationStyle.BIG_TEXT`
+ * - For BigPictureNotification: check `notification.style === NotificationStyle.BIG_PICTURE`
+ * - For InboxNotification: check `notification.style === NotificationStyle.INBOX`
+ * - For MessagingNotification: check `notification.style === NotificationStyle.MESSAGING`
+ * - For ProgressNotification: check `notification.category === NotificationCategory.PROGRESS`
+ * - For CallNotification: check category is CALL or MISSED_CALL
+ * - For MediaNotification: check style is MEDIA or DECORATED_MEDIA
  */
 export type NotificationItem =
   | BigTextNotification
@@ -336,6 +351,17 @@ export interface GetNotificationsResult {
   notifications: NotificationItem[];
 }
 
+/**
+ * Options for importNotifications.
+ */
+export interface ImportNotificationsOptions {
+  /**
+   * Array of notification items to import into the database.
+   * Each notification should conform to the NotificationItem type structure.
+   */
+  notifications: NotificationItem[];
+}
+
 export interface NotificationReaderPlugin extends Plugin {
   /**
    * Gets all active notifications from the notification listener service.
@@ -379,4 +405,56 @@ export interface NotificationReaderPlugin extends Plugin {
    * @platform Android
    */
   getNotifications(options?: GetNotificationsOptions): Promise<GetNotificationsResult>;
+
+  /**
+   * Deletes all notifications from the database.
+   * This does not affect notifications in the system notification drawer.
+   *
+   * @returns Promise resolving when all notifications have been deleted
+   * @since 1.0.0
+   * @platform Android
+   */
+  deleteAllNotifications(): Promise<void>;
+
+  /**
+   * Imports an array of notifications into the database.
+   * This method is useful for restoring previously exported notifications,
+   * migrating data from another source, or bulk-importing notification data.
+   * 
+   * Each notification will be inserted using REPLACE strategy, meaning if a
+   * notification with the same ID already exists, it will be updated.
+   *
+   * @param options - Object containing the array of notifications to import
+   * @returns Promise resolving when all notifications have been imported
+   * @throws Error if the notifications array is missing or if an error occurs during import
+   * @since 1.0.0
+   * @platform Android
+   * 
+   * @example
+   * ```typescript
+   * const notificationsToImport = [
+   *   {
+   *     id: 'notification-1',
+   *     appName: 'Example App',
+   *     packageName: 'com.example.app',
+   *     title: 'Test Notification',
+   *     text: 'This is a test',
+   *     timestamp: Date.now(),
+   *     style: NotificationStyle.DEFAULT,
+   *     actions: [],
+   *     isGroupSummary: false,
+   *     isOngoing: false,
+   *     autoCancel: true,
+   *     isLocalOnly: false,
+   *     priority: 0,
+   *     number: 0
+   *   }
+   * ];
+   * 
+   * await NotificationReader.importNotifications({
+   *   notifications: notificationsToImport
+   * });
+   * ```
+   */
+  importNotifications(options: ImportNotificationsOptions): Promise<void>;
 }

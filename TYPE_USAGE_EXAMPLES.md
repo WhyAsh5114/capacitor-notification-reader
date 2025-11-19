@@ -26,7 +26,8 @@ import { NotificationReader, NotificationItem, NotificationStyle, NotificationCa
 const { notifications } = await NotificationReader.getActiveNotifications();
 
 notifications.forEach((notification) => {
-  console.log(`${notification.app}: ${notification.title}`);
+  console.log(`${notification.appName}: ${notification.title}`);
+  console.log(`Package: ${notification.packageName}`);
   console.log(`Category: ${notification.category}, Style: ${notification.style}`);
 });
 ```
@@ -53,7 +54,8 @@ if (notifications.length > 0) {
 // Process notifications
 notifications.forEach((notification) => {
   console.log(`ID: ${notification.id}`); // UUID
-  console.log(`${notification.app}: ${notification.title}`);
+  console.log(`${notification.appName}: ${notification.title}`);
+  console.log(`Package: ${notification.packageName}`);
   console.log(`Category: ${notification.category}, Style: ${notification.style}`);
 });
 ```
@@ -209,8 +211,9 @@ const NotificationList: React.FC = () => {
           {notification.appIcon && (
             <img 
               src={`data:image/png;base64,${notification.appIcon}`} 
-              alt={notification.app}
+              alt={notification.appName}
               className="app-icon"
+              title={notification.packageName}
             />
           )}
           
@@ -368,12 +371,21 @@ export default NotificationHistory;
 ## Grouping Notifications
 
 ```typescript
-// Group notifications by app
+// Group notifications by app (using package name for unique identification)
 const groupedByApp = notifications.reduce((acc, notification) => {
-  if (!acc[notification.app]) {
-    acc[notification.app] = [];
+  if (!acc[notification.packageName]) {
+    acc[notification.packageName] = [];
   }
-  acc[notification.app].push(notification);
+  acc[notification.packageName].push(notification);
+  return acc;
+}, {} as Record<string, NotificationItem[]>);
+
+// Or group by app name (for display purposes)
+const groupedByAppName = notifications.reduce((acc, notification) => {
+  if (!acc[notification.appName]) {
+    acc[notification.appName] = [];
+  }
+  acc[notification.appName].push(notification);
   return acc;
 }, {} as Record<string, NotificationItem[]>);
 
@@ -411,26 +423,263 @@ const socialWithPictures = notifications.filter(n =>
 ) as BigPictureNotification[];
 ```
 
+## Database Management
+
+### Clear All Notifications
+
+```typescript
+import { NotificationReader } from 'capacitor-notification-reader';
+
+// Delete all stored notifications from the database
+await NotificationReader.deleteAllNotifications();
+console.log('Notification history cleared');
+
+// Note: This only affects the database, not the system notification drawer
+// New notifications will continue to be stored as they arrive
+```
+
+### Import Notifications
+
+```typescript
+import { NotificationReader, NotificationStyle, NotificationCategory } from 'capacitor-notification-reader';
+
+// Import notifications from backup or migration
+const backupNotifications = [
+  {
+    id: '550e8400-e29b-41d4-a716-446655440001',
+    appName: 'WhatsApp',
+    packageName: 'com.whatsapp',
+    title: 'Alice',
+    text: 'Hey, are we still meeting tomorrow?',
+    timestamp: Date.now() - 7200000, // 2 hours ago
+    style: NotificationStyle.MESSAGING,
+    category: NotificationCategory.MESSAGE,
+    actions: [
+      {
+        title: 'Reply',
+        allowsRemoteInput: true
+      }
+    ],
+    isGroupSummary: false,
+    isOngoing: false,
+    autoCancel: true,
+    isLocalOnly: false,
+    priority: 1,
+    number: 1,
+    messages: [
+      {
+        text: 'Hey, are we still meeting tomorrow?',
+        timestamp: Date.now() - 7200000,
+        sender: 'Alice'
+      }
+    ],
+    conversationTitle: 'Alice',
+    isGroupConversation: false
+  },
+  {
+    id: '550e8400-e29b-41d4-a716-446655440002',
+    appName: 'Gmail',
+    packageName: 'com.google.android.gm',
+    title: 'Important Update',
+    text: 'Your monthly report is ready for review.',
+    timestamp: Date.now() - 3600000, // 1 hour ago
+    style: NotificationStyle.BIG_TEXT,
+    category: NotificationCategory.EMAIL,
+    bigText: 'Your monthly report is ready for review. Please check the attached documents and provide feedback by end of week. This report includes Q4 metrics and annual projections.',
+    actions: [
+      {
+        title: 'Open',
+        allowsRemoteInput: false
+      },
+      {
+        title: 'Archive',
+        allowsRemoteInput: false
+      }
+    ],
+    isGroupSummary: false,
+    isOngoing: false,
+    autoCancel: true,
+    isLocalOnly: false,
+    priority: 0,
+    number: 1
+  }
+];
+
+// Import the notifications
+await NotificationReader.importNotifications({
+  notifications: backupNotifications
+});
+
+console.log('Imported', backupNotifications.length, 'notifications');
+
+// Verify the import
+const { notifications } = await NotificationReader.getNotifications({ limit: 10 });
+console.log('Total notifications in database:', notifications.length);
+```
+
+### Export and Import Pattern
+
+```typescript
+import { NotificationReader } from 'capacitor-notification-reader';
+
+// Export notifications to JSON
+const exportNotifications = async () => {
+  const { notifications } = await NotificationReader.getNotifications({ limit: 1000 });
+  const json = JSON.stringify(notifications, null, 2);
+  
+  // Save to file or send to server
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `notifications-backup-${Date.now()}.json`;
+  a.click();
+  
+  return notifications;
+};
+
+// Import notifications from JSON
+const importNotifications = async (jsonString: string) => {
+  const notifications = JSON.parse(jsonString);
+  
+  await NotificationReader.importNotifications({
+    notifications
+  });
+  
+  console.log('Successfully imported', notifications.length, 'notifications');
+};
+
+// Restore from backup
+const restoreFromBackup = async (backupFile: File) => {
+  const jsonString = await backupFile.text();
+  await importNotifications(jsonString);
+  
+  console.log('Backup restored successfully');
+};
+```
+
+### Merge Notifications (Avoid Duplicates)
+
+```typescript
+import { NotificationReader } from 'capacitor-notification-reader';
+
+// Import notifications while avoiding duplicates
+const mergeNotifications = async (newNotifications: NotificationItem[]) => {
+  // Get existing notifications
+  const { notifications: existing } = await NotificationReader.getNotifications({ 
+    limit: 10000 
+  });
+  
+  const existingIds = new Set(existing.map(n => n.id));
+  
+  // Filter out duplicates
+  const uniqueNotifications = newNotifications.filter(n => !existingIds.has(n.id));
+  
+  if (uniqueNotifications.length > 0) {
+    await NotificationReader.importNotifications({
+      notifications: uniqueNotifications
+    });
+    console.log('Imported', uniqueNotifications.length, 'new notifications');
+    console.log('Skipped', newNotifications.length - uniqueNotifications.length, 'duplicates');
+  } else {
+    console.log('No new notifications to import');
+  }
+};
+```
+
+### Clear and Reload
+
+```typescript
+import { NotificationReader } from 'capacitor-notification-reader';
+
+// Clear all notifications and reload the list
+const clearAndReload = async () => {
+  await NotificationReader.deleteAllNotifications();
+  
+  // Reload notifications (should be empty)
+  const { notifications } = await NotificationReader.getNotifications({
+    limit: 20
+  });
+  
+  console.log('Notifications after clear:', notifications.length); // Should be 0
+};
+```
+
 ## Type Guards for Runtime Checks
 
 ```typescript
+// Style-based type guards (most reliable for unique styles)
+function isBigTextNotification(notification: NotificationItem): notification is BigTextNotification {
+  return notification.style === NotificationStyle.BIG_TEXT;
+}
+
+function isBigPictureNotification(notification: NotificationItem): notification is BigPictureNotification {
+  return notification.style === NotificationStyle.BIG_PICTURE;
+}
+
+function isInboxNotification(notification: NotificationItem): notification is InboxNotification {
+  return notification.style === NotificationStyle.INBOX;
+}
+
 function isMessagingNotification(notification: NotificationItem): notification is MessagingNotification {
   return notification.style === NotificationStyle.MESSAGING;
 }
 
-function hasBigPicture(notification: NotificationItem): notification is BigPictureNotification {
-  return notification.style === NotificationStyle.BIG_PICTURE;
+// Category-based type guards (for types without unique styles)
+function isProgressNotification(notification: NotificationItem): notification is ProgressNotification {
+  return notification.category === NotificationCategory.PROGRESS;
 }
 
-function hasProgress(notification: NotificationItem): notification is ProgressNotification {
-  return notification.category === NotificationCategory.PROGRESS && 'progress' in notification;
+function isCallNotification(notification: NotificationItem): notification is CallNotification {
+  return notification.category === NotificationCategory.CALL || 
+         notification.category === NotificationCategory.MISSED_CALL;
 }
 
-// Usage
+function isMediaNotification(notification: NotificationItem): notification is MediaNotification {
+  return notification.style === NotificationStyle.MEDIA || 
+         notification.style === NotificationStyle.DECORATED_MEDIA;
+}
+
+// Usage examples
 notifications.forEach(notification => {
+  // Type guard automatically narrows the type
+  if (isBigPictureNotification(notification)) {
+    // TypeScript knows notification is BigPictureNotification
+    if (notification.bigPicture) {
+      displayImage(notification.bigPicture);
+    }
+  }
+  
   if (isMessagingNotification(notification)) {
-    // TypeScript knows this is a MessagingNotification
-    console.log(notification.messages);
+    // TypeScript knows notification is MessagingNotification
+    notification.messages.forEach(msg => {
+      console.log(`${msg.sender}: ${msg.text}`);
+    });
+  }
+  
+  if (isProgressNotification(notification)) {
+    // TypeScript knows notification is ProgressNotification
+    const percent = (notification.progress.current / notification.progress.max) * 100;
+    updateProgressBar(notification.id, percent);
+  }
+});
+
+// Combined type narrowing with inline checks
+notifications.forEach(notification => {
+  // Direct style check for unique styles
+  if (notification.style === NotificationStyle.BIG_TEXT) {
+    console.log('Expanded text:', notification.bigText);
+  }
+  
+  // Category check for types without unique styles
+  if (notification.category === NotificationCategory.PROGRESS) {
+    console.log('Progress:', notification.progress);
+  }
+  
+  // Combined check when needed
+  if (notification.style === NotificationStyle.CALL || 
+      notification.category === NotificationCategory.CALL) {
+    console.log('Call from:', notification.callerName);
   }
 });
 ```

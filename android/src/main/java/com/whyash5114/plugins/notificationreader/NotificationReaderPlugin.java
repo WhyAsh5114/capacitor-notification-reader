@@ -95,7 +95,7 @@ public class NotificationReaderPlugin extends Plugin {
         JSArray arr = new JSArray();
 
         for (StatusBarNotification sbn : notifs) {
-            NotificationEntity entity = com.whyash5114.plugins.notificationreader.parser.NotificationParser.parse(getContext(), sbn);
+            NotificationEntity entity = new NotificationEntity(getContext(), sbn);
             if (entity != null) {
                 arr.put(notificationEntityToJSObject(entity));
             }
@@ -129,10 +129,54 @@ public class NotificationReaderPlugin extends Plugin {
         }).start();
     }
 
+    @PluginMethod
+    public void deleteAllNotifications(PluginCall call) {
+        new Thread(() -> {
+            NotificationDatabase.getDatabase(getContext()).notificationDao().deleteAllNotifications();
+            call.resolve();
+        }).start();
+    }
+
+    /**
+     * Imports an array of notifications into the database.
+     * This method is useful for restoring previously exported notifications,
+     * migrating data from another source, or bulk-importing notification data.
+     * 
+     * Each notification will be inserted using REPLACE strategy, meaning if a
+     * notification with the same ID already exists, it will be updated.
+     *
+     * @param call PluginCall containing the array of notifications to import
+     *             Expected parameter: "notifications" - JSArray of notification objects
+     * @throws Exception if the notifications array is missing or if an error occurs during import
+     */
+    @PluginMethod
+    public void importNotifications(PluginCall call) {
+        JSArray notifications = call.getArray("notifications");
+        if (notifications == null) {
+            call.reject("Missing 'notifications' argument");
+            return;
+        }
+
+        new Thread(() -> {
+            try {
+                for (Object item : notifications.toList()) {
+                    if (item instanceof JSObject) {
+                        NotificationEntity entity = jsObjectToNotificationEntity((JSObject) item);
+                        NotificationDatabase.getDatabase(getContext()).notificationDao().insert(entity);
+                    }
+                }
+                call.resolve();
+            } catch (Exception e) {
+                call.reject("Error importing notifications", e);
+            }
+        }).start();
+    }
+
     public JSObject notificationEntityToJSObject(NotificationEntity entity) {
         JSObject obj = new JSObject();
         obj.put("id", entity.id);
-        obj.put("app", entity.packageName);
+        obj.put("appName", entity.appName);
+        obj.put("packageName", entity.packageName);
         obj.put("title", entity.title);
         obj.put("text", entity.text);
         obj.put("timestamp", entity.postTime);
@@ -186,6 +230,95 @@ public class NotificationReaderPlugin extends Plugin {
         obj.put("callerName", entity.callerName);
 
         return obj;
+    }
+
+    /**
+     * Converts a JSObject (from JavaScript) to a NotificationEntity (for database storage).
+     * This method is used when importing notifications to map the JavaScript notification
+     * object structure to the Room database entity structure.
+     *
+     * @param obj JSObject containing notification data from JavaScript
+     * @return NotificationEntity populated with data from the JSObject
+     * @throws JSONException if there's an error accessing JSObject properties
+     */
+    private NotificationEntity jsObjectToNotificationEntity(JSObject obj) throws JSONException {
+        NotificationEntity entity = new NotificationEntity();
+        entity.id = obj.getString("id");
+        entity.appName = obj.getString("appName");
+        entity.packageName = obj.getString("packageName");
+        entity.title = obj.getString("title");
+        entity.text = obj.getString("text");
+        entity.postTime = obj.getLong("timestamp");
+        entity.smallIcon = obj.getString("smallIcon");
+        entity.largeIcon = obj.getString("largeIcon");
+        entity.appIcon = obj.getString("appIcon");
+        entity.category = obj.getString("category");
+        entity.style = obj.getString("style");
+        entity.subText = obj.getString("subText");
+        entity.infoText = obj.getString("infoText");
+        entity.summaryText = obj.getString("summaryText");
+        entity.groupKey = obj.getString("group");
+        entity.isGroupSummary = obj.getBoolean("isGroupSummary");
+        entity.channelId = obj.getString("channelId");
+        try {
+            Object actionsObj = obj.get("actions");
+            if (actionsObj instanceof JSArray) {
+                entity.actionsJson = ((JSArray) actionsObj).toString();
+            } else if (actionsObj != null) {
+                entity.actionsJson = new JSArray(actionsObj.toString()).toString();
+            } else {
+                entity.actionsJson = new JSArray().toString();
+            }
+        } catch (Exception e) {
+            entity.actionsJson = new JSArray().toString();
+        }
+        entity.isOngoing = obj.getBoolean("isOngoing");
+        entity.autoCancel = obj.getBoolean("autoCancel");
+        entity.isLocalOnly = obj.getBoolean("isLocalOnly");
+        entity.priority = obj.getInteger("priority");
+        entity.number = obj.getInteger("number");
+
+        // Style-specific fields
+        entity.bigText = obj.getString("bigText");
+        entity.bigPicture = obj.getString("bigPicture");
+        entity.pictureContentDescription = obj.getString("pictureContentDescription");
+        try {
+            Object inboxLinesObj = obj.get("inboxLines");
+            if (inboxLinesObj instanceof JSArray) {
+                entity.inboxLinesJson = ((JSArray) inboxLinesObj).toString();
+            } else if (inboxLinesObj != null) {
+                entity.inboxLinesJson = new JSArray(inboxLinesObj.toString()).toString();
+            } else {
+                entity.inboxLinesJson = new JSArray().toString();
+            }
+        } catch (Exception e) {
+            entity.inboxLinesJson = new JSArray().toString();
+        }
+        entity.conversationTitle = obj.getString("conversationTitle");
+        entity.isGroupConversation = obj.getBoolean("isGroupConversation");
+        try {
+            Object messagesObj = obj.get("messages");
+            if (messagesObj instanceof JSArray) {
+                entity.messagesJson = ((JSArray) messagesObj).toString();
+            } else if (messagesObj != null) {
+                entity.messagesJson = new JSArray(messagesObj.toString()).toString();
+            } else {
+                entity.messagesJson = new JSArray().toString();
+            }
+        } catch (Exception e) {
+            entity.messagesJson = new JSArray().toString();
+        }
+
+        JSObject progressObj = obj.getJSObject("progress");
+        if (progressObj != null) {
+            entity.progress = progressObj.getInteger("current");
+            entity.progressMax = progressObj.getInteger("max");
+            entity.progressIndeterminate = progressObj.getBoolean("indeterminate");
+        }
+
+        entity.callerName = obj.getString("callerName");
+
+        return entity;
     }
 
     private boolean isNotificationAccessEnabled() {

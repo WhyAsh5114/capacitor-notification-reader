@@ -47,7 +47,7 @@ This plugin uses Android's NotificationListenerService combined with RoomDB to p
 
 The RoomDB database stores comprehensive notification data including:
 - Primary key: UUID (automatically generated for each notification)
-- Basic fields: package name, title, text, timestamp
+- Basic fields: app name (human-readable), package name, title, text, timestamp
 - Icons: small icon, large icon, app icon (all as base64)
 - Metadata: category, style, channel ID, group info, priority
 - Style-specific data: big text, big picture, inbox lines, messaging conversations
@@ -112,6 +112,64 @@ notifications.forEach((notification) => {
 });
 ```
 
+### Clear Notification History
+
+```typescript
+import { NotificationReader } from 'capacitor-notification-reader';
+
+// Delete all stored notifications from the database
+await NotificationReader.deleteAllNotifications();
+console.log('All notification history cleared');
+
+// Note: This only clears the database, not the system notification drawer
+```
+
+### Import Notifications
+
+```typescript
+import { NotificationReader, NotificationStyle } from 'capacitor-notification-reader';
+
+// Prepare notifications to import (e.g., from a backup or migration)
+const notificationsToImport = [
+  {
+    id: 'notification-1',
+    appName: 'WhatsApp',
+    packageName: 'com.whatsapp',
+    title: 'John Doe',
+    text: 'Hey, how are you?',
+    timestamp: Date.now() - 3600000, // 1 hour ago
+    style: NotificationStyle.MESSAGING,
+    category: 'msg',
+    actions: [],
+    isGroupSummary: false,
+    isOngoing: false,
+    autoCancel: true,
+    isLocalOnly: false,
+    priority: 0,
+    number: 1,
+    messages: [
+      {
+        text: 'Hey, how are you?',
+        timestamp: Date.now() - 3600000,
+        sender: 'John Doe'
+      }
+    ],
+    conversationTitle: 'John Doe',
+    isGroupConversation: false
+  }
+];
+
+// Import notifications into the database
+await NotificationReader.importNotifications({
+  notifications: notificationsToImport
+});
+console.log('Notifications imported successfully');
+
+// Verify import
+const { notifications } = await NotificationReader.getNotifications({ limit: 10 });
+console.log('Imported notifications:', notifications);
+```
+
 For more detailed examples, see [TYPE_USAGE_EXAMPLES.md](TYPE_USAGE_EXAMPLES.md).
 
 ## API
@@ -122,6 +180,8 @@ For more detailed examples, see [TYPE_USAGE_EXAMPLES.md](TYPE_USAGE_EXAMPLES.md)
 * [`openAccessSettings()`](#openaccesssettings)
 * [`isAccessEnabled()`](#isaccessenabled)
 * [`getNotifications(...)`](#getnotifications)
+* [`deleteAllNotifications()`](#deleteallnotifications)
+* [`importNotifications(...)`](#importnotifications)
 * [Interfaces](#interfaces)
 * [Type Aliases](#type-aliases)
 * [Enums](#enums)
@@ -199,6 +259,42 @@ retrieved later even after they are dismissed from the notification drawer.
 --------------------
 
 
+### deleteAllNotifications()
+
+```typescript
+deleteAllNotifications() => Promise<void>
+```
+
+Deletes all notifications from the database.
+This does not affect notifications in the system notification drawer.
+
+**Since:** 1.0.0
+
+--------------------
+
+
+### importNotifications(...)
+
+```typescript
+importNotifications(options: ImportNotificationsOptions) => Promise<void>
+```
+
+Imports an array of notifications into the database.
+This method is useful for restoring previously exported notifications,
+migrating data from another source, or bulk-importing notification data.
+
+Each notification will be inserted using REPLACE strategy, meaning if a
+notification with the same ID already exists, it will be updated.
+
+| Param         | Type                                                                              | Description                                              |
+| ------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| **`options`** | <code><a href="#importnotificationsoptions">ImportNotificationsOptions</a></code> | - Object containing the array of notifications to import |
+
+**Since:** 1.0.0
+
+--------------------
+
+
 ### Interfaces
 
 
@@ -218,7 +314,7 @@ Big text style notification with expanded text content
 | Prop          | Type                                                                     | Description                      |
 | ------------- | ------------------------------------------------------------------------ | -------------------------------- |
 | **`style`**   | <code><a href="#notificationstyle">NotificationStyle.BIG_TEXT</a></code> | Notification style template used |
-| **`bigText`** | <code>string \| null</code>                                              | The full expanded text content   |
+| **`bigText`** | <code>string</code>                                                      | The full expanded text content   |
 
 
 #### BigPictureNotification
@@ -228,8 +324,8 @@ Big picture style notification with an image
 | Prop                            | Type                                                                        | Description                                   |
 | ------------------------------- | --------------------------------------------------------------------------- | --------------------------------------------- |
 | **`style`**                     | <code><a href="#notificationstyle">NotificationStyle.BIG_PICTURE</a></code> | Notification style template used              |
-| **`bigPicture`**                | <code>string \| null</code>                                                 | Base64-encoded picture shown in expanded view |
-| **`pictureContentDescription`** | <code>string \| null</code>                                                 | Content description for the picture           |
+| **`bigPicture`**                | <code>string</code>                                                         | Base64-encoded picture shown in expanded view |
+| **`pictureContentDescription`** | <code>string</code>                                                         | Content description for the picture           |
 
 
 #### InboxNotification
@@ -250,7 +346,7 @@ Messaging style notification for chat/messaging apps
 | ------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------- |
 | **`style`**               | <code><a href="#notificationstyle">NotificationStyle.MESSAGING</a></code>     | Notification style template used                   |
 | **`category`**            | <code><a href="#notificationcategory">NotificationCategory.MESSAGE</a></code> | Notification category (call, message, email, etc.) |
-| **`conversationTitle`**   | <code>string \| null</code>                                                   | Conversation title for group chats                 |
+| **`conversationTitle`**   | <code>string</code>                                                           | Conversation title for group chats                 |
 | **`isGroupConversation`** | <code>boolean</code>                                                          | Whether this is a group conversation               |
 | **`messages`**            | <code>NotificationMessage[]</code>                                            | Array of messages in the conversation              |
 
@@ -259,11 +355,11 @@ Messaging style notification for chat/messaging apps
 
 Message in a messaging-style notification
 
-| Prop            | Type                        | Description              |
-| --------------- | --------------------------- | ------------------------ |
-| **`text`**      | <code>string</code>         | Message text             |
-| **`timestamp`** | <code>number</code>         | Timestamp of the message |
-| **`sender`**    | <code>string \| null</code> | Sender name              |
+| Prop            | Type                | Description              |
+| --------------- | ------------------- | ------------------------ |
+| **`text`**      | <code>string</code> | Message text             |
+| **`timestamp`** | <code>number</code> | Timestamp of the message |
+| **`sender`**    | <code>string</code> | Sender name              |
 
 
 #### ProgressNotification
@@ -272,6 +368,7 @@ Progress style notification for downloads, uploads, etc.
 
 | Prop           | Type                                                                           | Description                                        |
 | -------------- | ------------------------------------------------------------------------------ | -------------------------------------------------- |
+| **`style`**    | <code><a href="#notificationstyle">NotificationStyle.DEFAULT</a></code>        | Notification style template used                   |
 | **`category`** | <code><a href="#notificationcategory">NotificationCategory.PROGRESS</a></code> | Notification category (call, message, email, etc.) |
 | **`progress`** | <code><a href="#notificationprogress">NotificationProgress</a></code>          | Progress information                               |
 
@@ -293,8 +390,9 @@ Call notification
 
 | Prop             | Type                                                                                                                                               | Description                                        |
 | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| **`style`**      | <code><a href="#notificationstyle">NotificationStyle.CALL</a> \| <a href="#notificationstyle">NotificationStyle.DEFAULT</a></code>                 | Notification style template used                   |
 | **`category`**   | <code><a href="#notificationcategory">NotificationCategory.CALL</a> \| <a href="#notificationcategory">NotificationCategory.MISSED_CALL</a></code> | Notification category (call, message, email, etc.) |
-| **`callerName`** | <code>string \| null</code>                                                                                                                        | Caller name                                        |
+| **`callerName`** | <code>string</code>                                                                                                                                | Caller name                                        |
 
 
 #### MediaNotification
@@ -335,6 +433,15 @@ Options for getNotifications.
 | **`limit`**  | <code>number</code> | Maximum number of notifications to retrieve.                                                                                                                                                                                          | <code>10</code> |
 
 
+#### ImportNotificationsOptions
+
+Options for importNotifications.
+
+| Prop                | Type                            | Description                                                                                                                                                       |
+| ------------------- | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`notifications`** | <code>NotificationItem[]</code> | Array of notification items to import into the database. Each notification should conform to the <a href="#notificationitem">NotificationItem</a> type structure. |
+
+
 ### Type Aliases
 
 
@@ -342,6 +449,15 @@ Options for getNotifications.
 
 Union type of all specific notification types.
 Use discriminated union on 'style' and 'category' for type narrowing.
+
+Type narrowing examples:
+- For <a href="#bigtextnotification">BigTextNotification</a>: check `notification.style === <a href="#notificationstyle">NotificationStyle</a>.BIG_TEXT`
+- For <a href="#bigpicturenotification">BigPictureNotification</a>: check `notification.style === <a href="#notificationstyle">NotificationStyle</a>.BIG_PICTURE`
+- For <a href="#inboxnotification">InboxNotification</a>: check `notification.style === <a href="#notificationstyle">NotificationStyle</a>.INBOX`
+- For <a href="#messagingnotification">MessagingNotification</a>: check `notification.style === <a href="#notificationstyle">NotificationStyle</a>.MESSAGING`
+- For <a href="#progressnotification">ProgressNotification</a>: check `notification.category === <a href="#notificationcategory">NotificationCategory</a>.PROGRESS`
+- For <a href="#callnotification">CallNotification</a>: check category is CALL or MISSED_CALL
+- For <a href="#medianotification">MediaNotification</a>: check style is MEDIA or DECORATED_MEDIA
 
 <code><a href="#bigtextnotification">BigTextNotification</a> | <a href="#bigpicturenotification">BigPictureNotification</a> | <a href="#inboxnotification">InboxNotification</a> | <a href="#messagingnotification">MessagingNotification</a> | <a href="#progressnotification">ProgressNotification</a> | <a href="#callnotification">CallNotification</a> | <a href="#medianotification">MediaNotification</a> | <a href="#genericnotification">GenericNotification</a></code>
 
