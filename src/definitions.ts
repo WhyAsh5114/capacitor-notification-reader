@@ -1,4 +1,4 @@
-import { Plugin } from '@capacitor/core';
+import { Plugin, PluginListenerHandle } from '@capacitor/core';
 
 /**
  * Android notification categories
@@ -329,9 +329,8 @@ export interface GetActiveNotificationsResult {
  */
 export interface GetNotificationsOptions {
   /**
-   * Retrieve notifications with timestamps before this value (cursor-based pagination).
-   * Use the timestamp of the last notification from the previous batch to get the next batch.
-   * If not provided, returns the most recent notifications.
+   * Return notifications whose timestamp is strictly less than this value (in ms).
+   * Use the `timestamp` from the last item of the previous page when paginating.
    */
   cursor?: number;
   /**
@@ -339,6 +338,10 @@ export interface GetNotificationsOptions {
    * @default 10
    */
   limit?: number;
+  /**
+   * Optional filter criteria applied on the stored notifications.
+   */
+  filter?: NotificationFilter;
 }
 
 /**
@@ -349,6 +352,57 @@ export interface GetNotificationsResult {
    * Array of notifications from the database.
    */
   notifications: NotificationItem[];
+}
+
+/**
+ * Advanced filters for querying stored notifications.
+ * Each filter is optional and multiple filters are combined with AND logic.
+ */
+export interface NotificationFilter {
+  /**
+   * Match notifications whose text contains the provided value (case-sensitive).
+   */
+  textContains?: string;
+  /**
+   * Match notifications whose title contains the provided value (case-sensitive).
+   */
+  titleContains?: string;
+  /**
+   * Match notifications whose text contains the provided value (case-insensitive).
+   */
+  textContainsInsensitive?: string;
+  /**
+   * Match notifications whose title contains the provided value (case-insensitive).
+   */
+  titleContainsInsensitive?: string;
+  /**
+   * Only return notifications whose `appName` exactly matches one of the supplied names.
+   */
+  appNames?: string[];
+  /**
+   * Filter by package name of the posting application.
+   */
+  packageName?: string;
+  /**
+   * Filter by notification category.
+   */
+  category?: NotificationCategory | string;
+  /**
+   * Filter by notification style template.
+   */
+  style?: NotificationStyle | string;
+  /**
+   * Filter for ongoing (non-dismissible) notifications only.
+   */
+  isOngoing?: boolean;
+  /**
+   * Filter for group summary notifications only.
+   */
+  isGroupSummary?: boolean;
+  /**
+   * Filter by notification channel ID (Android 8+).
+   */
+  channelId?: string;
 }
 
 /**
@@ -395,11 +449,11 @@ export interface NotificationReaderPlugin extends Plugin {
   isAccessEnabled(): Promise<{ enabled: boolean }>;
 
   /**
-   * Retrieves notifications from the database with pagination support.
-   * Notifications are stored in the database when they are posted and can be
-   * retrieved later even after they are dismissed from the notification drawer.
-   *
-   * @param options - Pagination options (afterId and limit)
+    * Retrieves notifications from the persistent Room database with optional
+    * filtering and cursor-based pagination. Notifications are cached when they are posted and can be
+    * queried later even after dismissal from the notification drawer.
+    *
+    * @param options - Cursor, limit, and filtering options
    * @returns Promise resolving with the list of notifications from the database
    * @since 1.0.0
    * @platform Android
@@ -457,4 +511,13 @@ export interface NotificationReaderPlugin extends Plugin {
    * ```
    */
   importNotifications(options: ImportNotificationsOptions): Promise<void>;
+
+  /**
+   * Listen for notifications that are posted while the listener service is running.
+   * Fires with the freshly-captured notification payload.
+   */
+  addListener(
+    eventName: 'notificationPosted',
+    listenerFunc: (notification: NotificationItem) => void,
+  ): Promise<PluginListenerHandle>;
 }

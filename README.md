@@ -182,6 +182,7 @@ For more detailed examples, see [TYPE_USAGE_EXAMPLES.md](TYPE_USAGE_EXAMPLES.md)
 * [`getNotifications(...)`](#getnotifications)
 * [`deleteAllNotifications()`](#deleteallnotifications)
 * [`importNotifications(...)`](#importnotifications)
+* [`addListener('notificationPosted', ...)`](#addlistenernotificationposted-)
 * [Interfaces](#interfaces)
 * [Type Aliases](#type-aliases)
 * [Enums](#enums)
@@ -244,13 +245,13 @@ Checks if the app has notification access enabled.
 getNotifications(options?: GetNotificationsOptions | undefined) => Promise<GetNotificationsResult>
 ```
 
-Retrieves notifications from the database with pagination support.
-Notifications are stored in the database when they are posted and can be
-retrieved later even after they are dismissed from the notification drawer.
+Retrieves notifications from the persistent Room database with optional
+filtering and cursor-based pagination. Notifications are cached when they are posted and can be
+queried later even after dismissal from the notification drawer.
 
-| Param         | Type                                                                        | Description                              |
-| ------------- | --------------------------------------------------------------------------- | ---------------------------------------- |
-| **`options`** | <code><a href="#getnotificationsoptions">GetNotificationsOptions</a></code> | - Pagination options (afterId and limit) |
+| Param         | Type                                                                        | Description                            |
+| ------------- | --------------------------------------------------------------------------- | -------------------------------------- |
+| **`options`** | <code><a href="#getnotificationsoptions">GetNotificationsOptions</a></code> | - Cursor, limit, and filtering options |
 
 **Returns:** <code>Promise&lt;<a href="#getnotificationsresult">GetNotificationsResult</a>&gt;</code>
 
@@ -291,6 +292,25 @@ notification with the same ID already exists, it will be updated.
 | **`options`** | <code><a href="#importnotificationsoptions">ImportNotificationsOptions</a></code> | - Object containing the array of notifications to import |
 
 **Since:** 1.0.0
+
+--------------------
+
+
+### addListener('notificationPosted', ...)
+
+```typescript
+addListener(eventName: 'notificationPosted', listenerFunc: (notification: NotificationItem) => void) => Promise<PluginListenerHandle>
+```
+
+Listen for notifications that are posted while the listener service is running.
+Fires with the freshly-captured notification payload.
+
+| Param              | Type                                                                                     |
+| ------------------ | ---------------------------------------------------------------------------------------- |
+| **`eventName`**    | <code>'notificationPosted'</code>                                                        |
+| **`listenerFunc`** | <code>(notification: <a href="#notificationitem">NotificationItem</a>) =&gt; void</code> |
+
+**Returns:** <code>Promise&lt;<a href="#pluginlistenerhandle">PluginListenerHandle</a>&gt;</code>
 
 --------------------
 
@@ -427,10 +447,31 @@ Result returned by getNotifications.
 
 Options for getNotifications.
 
-| Prop         | Type                | Description                                                                                                                                                                                                                           | Default         |
-| ------------ | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
-| **`cursor`** | <code>number</code> | Retrieve notifications with timestamps before this value (cursor-based pagination). Use the timestamp of the last notification from the previous batch to get the next batch. If not provided, returns the most recent notifications. |                 |
-| **`limit`**  | <code>number</code> | Maximum number of notifications to retrieve.                                                                                                                                                                                          | <code>10</code> |
+| Prop         | Type                                                              | Description                                                                                                                                                 | Default         |
+| ------------ | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
+| **`cursor`** | <code>number</code>                                               | Return notifications whose timestamp is strictly less than this value (in ms). Use the `timestamp` from the last item of the previous page when paginating. |                 |
+| **`limit`**  | <code>number</code>                                               | Maximum number of notifications to retrieve.                                                                                                                | <code>10</code> |
+| **`filter`** | <code><a href="#notificationfilter">NotificationFilter</a></code> | Optional filter criteria applied on the stored notifications.                                                                                               |                 |
+
+
+#### NotificationFilter
+
+Advanced filters for querying stored notifications.
+Each filter is optional and multiple filters are combined with AND logic.
+
+| Prop                           | Type                  | Description                                                                          |
+| ------------------------------ | --------------------- | ------------------------------------------------------------------------------------ |
+| **`textContains`**             | <code>string</code>   | Match notifications whose text contains the provided value (case-sensitive).         |
+| **`titleContains`**            | <code>string</code>   | Match notifications whose title contains the provided value (case-sensitive).        |
+| **`textContainsInsensitive`**  | <code>string</code>   | Match notifications whose text contains the provided value (case-insensitive).       |
+| **`titleContainsInsensitive`** | <code>string</code>   | Match notifications whose title contains the provided value (case-insensitive).      |
+| **`appNames`**                 | <code>string[]</code> | Only return notifications whose `appName` exactly matches one of the supplied names. |
+| **`packageName`**              | <code>string</code>   | Filter by package name of the posting application.                                   |
+| **`category`**                 | <code>string</code>   | Filter by notification category.                                                     |
+| **`style`**                    | <code>string</code>   | Filter by notification style template.                                               |
+| **`isOngoing`**                | <code>boolean</code>  | Filter for ongoing (non-dismissible) notifications only.                             |
+| **`isGroupSummary`**           | <code>boolean</code>  | Filter for group summary notifications only.                                         |
+| **`channelId`**                | <code>string</code>   | Filter by notification channel ID (Android 8+).                                      |
 
 
 #### ImportNotificationsOptions
@@ -440,6 +481,13 @@ Options for importNotifications.
 | Prop                | Type                            | Description                                                                                                                                                       |
 | ------------------- | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **`notifications`** | <code>NotificationItem[]</code> | Array of notification items to import into the database. Each notification should conform to the <a href="#notificationitem">NotificationItem</a> type structure. |
+
+
+#### PluginListenerHandle
+
+| Prop         | Type                                      |
+| ------------ | ----------------------------------------- |
+| **`remove`** | <code>() =&gt; Promise&lt;void&gt;</code> |
 
 
 ### Type Aliases

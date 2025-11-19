@@ -4,6 +4,8 @@ import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
+import androidx.room.RawQuery;
+import androidx.sqlite.db.SupportSQLiteQuery;
 
 import java.util.List;
 
@@ -17,6 +19,9 @@ public interface NotificationDao {
 
     @Query("SELECT * FROM notifications ORDER BY postTime DESC LIMIT :limit")
     List<NotificationEntity> getNotifications(int limit);
+
+    @RawQuery
+    List<NotificationEntity> getNotifications(SupportSQLiteQuery query);
 
     @Query("DELETE FROM notifications")
     void deleteAllNotifications();
