@@ -3,7 +3,6 @@ package com.whyash5114.plugins.notificationreader;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.service.notification.StatusBarNotification;
-
 import com.whyash5114.plugins.notificationreader.db.NotificationDatabase;
 import com.whyash5114.plugins.notificationreader.db.NotificationEntity;
 
@@ -38,7 +37,8 @@ public class NotificationListenerService extends android.service.notification.No
                 }
                 // Mark as processed
                 prefs.edit().putBoolean(PREF_INITIAL_NOTIFICATIONS_PROCESSED, true).apply();
-            }).start();
+            })
+                .start();
         }
     }
 
@@ -61,6 +61,7 @@ public class NotificationListenerService extends android.service.notification.No
             NotificationDatabase.getDatabase(context).notificationDao().insert(entity);
             // Notify the plugin
             NotificationReaderPlugin.onNotificationPosted(entity);
-        }).start();
+        })
+            .start();
     }
 }

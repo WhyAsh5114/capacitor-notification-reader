@@ -1,6 +1,12 @@
 import { WebPlugin } from '@capacitor/core';
 
-import type { GetActiveNotificationsResult, GetNotificationsOptions, GetNotificationsResult, ImportNotificationsOptions, NotificationReaderPlugin } from './definitions';
+import type {
+  GetActiveNotificationsResult,
+  GetNotificationsOptions,
+  GetNotificationsResult,
+  ImportNotificationsOptions,
+  NotificationReaderPlugin,
+} from './definitions';
 
 export class NotificationReaderWeb extends WebPlugin implements NotificationReaderPlugin {
   async getActiveNotifications(): Promise<GetActiveNotificationsResult> {

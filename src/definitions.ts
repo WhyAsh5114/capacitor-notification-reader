@@ -1,4 +1,4 @@
-import { Plugin, PluginListenerHandle } from '@capacitor/core';
+import type { Plugin, PluginListenerHandle } from '@capacitor/core';
 
 /**
  * Android notification categories
@@ -294,7 +294,7 @@ export interface GenericNotification extends BaseNotification {
 /**
  * Union type of all specific notification types.
  * Use discriminated union on 'style' and 'category' for type narrowing.
- * 
+ *
  * Type narrowing examples:
  * - For BigTextNotification: check `notification.style === NotificationStyle.BIG_TEXT`
  * - For BigPictureNotification: check `notification.style === NotificationStyle.BIG_PICTURE`
@@ -459,11 +459,11 @@ export interface NotificationReaderPlugin extends Plugin {
   isAccessEnabled(): Promise<{ enabled: boolean }>;
 
   /**
-    * Retrieves notifications from the persistent Room database with optional
-    * filtering and cursor-based pagination. Notifications are cached when they are posted and can be
-    * queried later even after dismissal from the notification drawer.
-    *
-    * @param options - Cursor, limit, and filtering options
+   * Retrieves notifications from the persistent Room database with optional
+   * filtering and cursor-based pagination. Notifications are cached when they are posted and can be
+   * queried later even after dismissal from the notification drawer.
+   *
+   * @param options - Cursor, limit, and filtering options
    * @returns Promise resolving with the list of notifications from the database
    * @since 1.0.0
    * @platform Android
@@ -494,7 +494,7 @@ export interface NotificationReaderPlugin extends Plugin {
    * Imports an array of notifications into the database.
    * This method is useful for restoring previously exported notifications,
    * migrating data from another source, or bulk-importing notification data.
-   * 
+   *
    * Each notification will be inserted using REPLACE strategy, meaning if a
    * notification with the same ID already exists, it will be updated.
    *
@@ -503,7 +503,7 @@ export interface NotificationReaderPlugin extends Plugin {
    * @throws Error if the notifications array is missing or if an error occurs during import
    * @since 1.0.0
    * @platform Android
-   * 
+   *
    * @example
    * ```typescript
    * const notificationsToImport = [
@@ -524,7 +524,7 @@ export interface NotificationReaderPlugin extends Plugin {
    *     number: 0
    *   }
    * ];
-   * 
+   *
    * await NotificationReader.importNotifications({
    *   notifications: notificationsToImport
    * });

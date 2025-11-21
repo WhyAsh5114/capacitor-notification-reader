@@ -1,4 +1,3 @@
-
 package com.whyash5114.plugins.notificationreader.db;
 
 import android.app.Notification;
@@ -16,19 +15,17 @@ import android.os.Bundle;
 import android.os.Parcelable;
 import android.service.notification.StatusBarNotification;
 import android.util.Base64;
-
 import androidx.annotation.NonNull;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
-
 import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
-
 import java.io.ByteArrayOutputStream;
 import java.util.UUID;
 
 @Entity(tableName = "notifications")
 public class NotificationEntity {
+
     @PrimaryKey
     @NonNull
     public String id;
@@ -36,8 +33,10 @@ public class NotificationEntity {
     // Base notification fields
     @NonNull
     public String packageName;
+
     @NonNull
     public String appName;
+
     public String title;
     public String text;
     public long postTime;
@@ -45,16 +44,20 @@ public class NotificationEntity {
     public String largeIcon;
     public String appIcon;
     public String category;
+
     @NonNull
     public String style;
+
     public String subText;
     public String infoText;
     public String summaryText;
     public String groupKey;
     public boolean isGroupSummary;
     public String channelId;
+
     @NonNull
     public String actionsJson;
+
     public boolean isOngoing;
     public boolean autoCancel;
     public boolean isLocalOnly;
@@ -205,7 +208,7 @@ public class NotificationEntity {
                 }
                 break;
             case "MessagingStyle":
-                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                     CharSequence conversationTitleChars = extras.getCharSequence(Notification.EXTRA_CONVERSATION_TITLE);
                     this.conversationTitle = conversationTitleChars != null ? conversationTitleChars.toString() : null;
                 }

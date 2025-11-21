@@ -3,10 +3,8 @@ package com.whyash5114.plugins.notificationreader;
 import android.content.Intent;
 import android.provider.Settings;
 import android.service.notification.StatusBarNotification;
-
 import androidx.activity.result.ActivityResult;
 import androidx.sqlite.db.SimpleSQLiteQuery;
-
 import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
@@ -16,14 +14,12 @@ import com.getcapacitor.annotation.ActivityCallback;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.whyash5114.plugins.notificationreader.db.NotificationDatabase;
 import com.whyash5114.plugins.notificationreader.db.NotificationEntity;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * Capacitor plugin for reading Android notifications.
@@ -46,7 +42,6 @@ public class NotificationReaderPlugin extends Plugin {
             instance.notifyListeners("notificationPosted", notificationData);
         }
     }
-
 
     /**
      * Opens the Android system settings page for notification listener access.
@@ -219,7 +214,9 @@ public class NotificationReaderPlugin extends Plugin {
                 args.add(safeLimit);
 
                 SimpleSQLiteQuery query = new SimpleSQLiteQuery(queryBuilder.toString(), args.toArray());
-                List<NotificationEntity> entities = NotificationDatabase.getDatabase(getContext()).notificationDao().getNotifications(query);
+                List<NotificationEntity> entities = NotificationDatabase.getDatabase(getContext())
+                    .notificationDao()
+                    .getNotifications(query);
 
                 JSArray notificationArray = new JSArray();
                 for (NotificationEntity entity : entities) {
@@ -231,7 +228,8 @@ public class NotificationReaderPlugin extends Plugin {
             } catch (JSONException e) {
                 call.reject("Invalid filter options", e);
             }
-        }).start();
+        })
+            .start();
     }
 
     @SuppressWarnings("unused")
@@ -240,7 +238,8 @@ public class NotificationReaderPlugin extends Plugin {
         new Thread(() -> {
             NotificationDatabase.getDatabase(getContext()).notificationDao().deleteAllNotifications();
             call.resolve();
-        }).start();
+        })
+            .start();
     }
 
     /**
@@ -257,7 +256,8 @@ public class NotificationReaderPlugin extends Plugin {
             JSObject result = new JSObject();
             result.put("count", count);
             call.resolve(result);
-        }).start();
+        })
+            .start();
     }
 
     /**
@@ -303,7 +303,8 @@ public class NotificationReaderPlugin extends Plugin {
             } catch (Exception e) {
                 call.reject("Error importing notifications", e);
             }
-        }).start();
+        })
+            .start();
     }
 
     public JSObject notificationEntityToJSObject(NotificationEntity entity) {
@@ -387,7 +388,7 @@ public class NotificationReaderPlugin extends Plugin {
         entity.largeIcon = obj.getString("largeIcon", "");
         entity.appIcon = obj.getString("appIcon", "");
         entity.category = obj.getString("category", "");
-            entity.style = obj.getString("style", "default");
+        entity.style = obj.getString("style", "default");
         entity.subText = obj.getString("subText", "");
         entity.infoText = obj.getString("infoText", "");
         entity.summaryText = obj.getString("summaryText", "");
