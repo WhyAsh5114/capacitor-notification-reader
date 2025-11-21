@@ -25,4 +25,7 @@ public interface NotificationDao {
 
     @Query("DELETE FROM notifications")
     void deleteAllNotifications();
+
+    @Query("SELECT COUNT(*) FROM notifications")
+    int getTotalCount();
 }

@@ -403,6 +403,16 @@ export interface NotificationFilter {
    * Filter by notification channel ID (Android 8+).
    */
   channelId?: string;
+  /**
+   * Only return notifications posted after this timestamp (in milliseconds).
+   * Creates a lower bound for the time range.
+   */
+  afterTimestamp?: number;
+  /**
+   * Only return notifications posted before this timestamp (in milliseconds).
+   * Creates an upper bound for the time range.
+   */
+  beforeTimestamp?: number;
 }
 
 /**
@@ -469,6 +479,16 @@ export interface NotificationReaderPlugin extends Plugin {
    * @platform Android
    */
   deleteAllNotifications(): Promise<void>;
+
+  /**
+   * Gets the total count of notifications stored in the database.
+   * This count includes all notifications regardless of their status or type.
+   *
+   * @returns Promise resolving with an object containing the total count
+   * @since 1.0.0
+   * @platform Android
+   */
+  getTotalCount(): Promise<{ count: number }>;
 
   /**
    * Imports an array of notifications into the database.

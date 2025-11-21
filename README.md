@@ -181,6 +181,7 @@ For more detailed examples, see [TYPE_USAGE_EXAMPLES.md](TYPE_USAGE_EXAMPLES.md)
 * [`isAccessEnabled()`](#isaccessenabled)
 * [`getNotifications(...)`](#getnotifications)
 * [`deleteAllNotifications()`](#deleteallnotifications)
+* [`getTotalCount()`](#gettotalcount)
 * [`importNotifications(...)`](#importnotifications)
 * [`addListener('notificationPosted', ...)`](#addlistenernotificationposted-)
 * [Interfaces](#interfaces)
@@ -268,6 +269,22 @@ deleteAllNotifications() => Promise<void>
 
 Deletes all notifications from the database.
 This does not affect notifications in the system notification drawer.
+
+**Since:** 1.0.0
+
+--------------------
+
+
+### getTotalCount()
+
+```typescript
+getTotalCount() => Promise<{ count: number; }>
+```
+
+Gets the total count of notifications stored in the database.
+This count includes all notifications regardless of their status or type.
+
+**Returns:** <code>Promise&lt;{ count: number; }&gt;</code>
 
 **Since:** 1.0.0
 
@@ -459,19 +476,21 @@ Options for getNotifications.
 Advanced filters for querying stored notifications.
 Each filter is optional and multiple filters are combined with AND logic.
 
-| Prop                           | Type                  | Description                                                                          |
-| ------------------------------ | --------------------- | ------------------------------------------------------------------------------------ |
-| **`textContains`**             | <code>string</code>   | Match notifications whose text contains the provided value (case-sensitive).         |
-| **`titleContains`**            | <code>string</code>   | Match notifications whose title contains the provided value (case-sensitive).        |
-| **`textContainsInsensitive`**  | <code>string</code>   | Match notifications whose text contains the provided value (case-insensitive).       |
-| **`titleContainsInsensitive`** | <code>string</code>   | Match notifications whose title contains the provided value (case-insensitive).      |
-| **`appNames`**                 | <code>string[]</code> | Only return notifications whose `appName` exactly matches one of the supplied names. |
-| **`packageName`**              | <code>string</code>   | Filter by package name of the posting application.                                   |
-| **`category`**                 | <code>string</code>   | Filter by notification category.                                                     |
-| **`style`**                    | <code>string</code>   | Filter by notification style template.                                               |
-| **`isOngoing`**                | <code>boolean</code>  | Filter for ongoing (non-dismissible) notifications only.                             |
-| **`isGroupSummary`**           | <code>boolean</code>  | Filter for group summary notifications only.                                         |
-| **`channelId`**                | <code>string</code>   | Filter by notification channel ID (Android 8+).                                      |
+| Prop                           | Type                  | Description                                                                                                          |
+| ------------------------------ | --------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| **`textContains`**             | <code>string</code>   | Match notifications whose text contains the provided value (case-sensitive).                                         |
+| **`titleContains`**            | <code>string</code>   | Match notifications whose title contains the provided value (case-sensitive).                                        |
+| **`textContainsInsensitive`**  | <code>string</code>   | Match notifications whose text contains the provided value (case-insensitive).                                       |
+| **`titleContainsInsensitive`** | <code>string</code>   | Match notifications whose title contains the provided value (case-insensitive).                                      |
+| **`appNames`**                 | <code>string[]</code> | Only return notifications whose `appName` exactly matches one of the supplied names.                                 |
+| **`packageName`**              | <code>string</code>   | Filter by package name of the posting application.                                                                   |
+| **`category`**                 | <code>string</code>   | Filter by notification category.                                                                                     |
+| **`style`**                    | <code>string</code>   | Filter by notification style template.                                                                               |
+| **`isOngoing`**                | <code>boolean</code>  | Filter for ongoing (non-dismissible) notifications only.                                                             |
+| **`isGroupSummary`**           | <code>boolean</code>  | Filter for group summary notifications only.                                                                         |
+| **`channelId`**                | <code>string</code>   | Filter by notification channel ID (Android 8+).                                                                      |
+| **`afterTimestamp`**           | <code>number</code>   | Only return notifications posted after this timestamp (in milliseconds). Creates a lower bound for the time range.   |
+| **`beforeTimestamp`**          | <code>number</code>   | Only return notifications posted before this timestamp (in milliseconds). Creates an upper bound for the time range. |
 
 
 #### ImportNotificationsOptions

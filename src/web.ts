@@ -21,4 +21,7 @@ export class NotificationReaderWeb extends WebPlugin implements NotificationRead
   async importNotifications(_options: ImportNotificationsOptions): Promise<void> {
     throw this.unimplemented('Not implemented on web.');
   }
+  async getTotalCount(): Promise<{ count: number }> {
+    throw this.unimplemented('Not implemented on web.');
+  }
 }

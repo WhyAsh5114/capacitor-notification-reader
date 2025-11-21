@@ -194,6 +194,18 @@ public class NotificationReaderPlugin extends Plugin {
                     args.add(channelIdFilter);
                 }
 
+                Long afterTimestamp = getLongOption(filterCopy, rootOptions, "afterTimestamp");
+                if (afterTimestamp != null && afterTimestamp > 0) {
+                    conditions.add("postTime > ?");
+                    args.add(afterTimestamp);
+                }
+
+                Long beforeTimestamp = getLongOption(filterCopy, rootOptions, "beforeTimestamp");
+                if (beforeTimestamp != null && beforeTimestamp > 0) {
+                    conditions.add("postTime < ?");
+                    args.add(beforeTimestamp);
+                }
+
                 if (cursor != null && cursor > 0) {
                     conditions.add("postTime < ?");
                     args.add(cursor);
@@ -232,6 +244,23 @@ public class NotificationReaderPlugin extends Plugin {
     }
 
     /**
+     * Retrieves the total count of notifications stored in the database.
+     * This count includes all notifications regardless of their status or type.
+     *
+     * @param call PluginCall to resolve with the count
+     */
+    @SuppressWarnings("unused")
+    @PluginMethod
+    public void getTotalCount(PluginCall call) {
+        new Thread(() -> {
+            int count = NotificationDatabase.getDatabase(getContext()).notificationDao().getTotalCount();
+            JSObject result = new JSObject();
+            result.put("count", count);
+            call.resolve(result);
+        }).start();
+    }
+
+    /**
      * Imports an array of notifications into the database.
      * This method is useful for restoring previously exported notifications,
      * migrating data from another source, or bulk-importing notification data.
@@ -253,13 +282,24 @@ public class NotificationReaderPlugin extends Plugin {
 
         new Thread(() -> {
             try {
-                for (Object item : notifications.toList()) {
-                    if (item instanceof JSObject) {
-                        NotificationEntity entity = jsObjectToNotificationEntity((JSObject) item);
-                        NotificationDatabase.getDatabase(getContext()).notificationDao().insert(entity);
+                int importedCount = 0;
+                for (int i = 0; i < notifications.length(); i++) {
+                    try {
+                        JSONObject jsonObj = notifications.getJSONObject(i);
+                        JSObject item = JSObject.fromJSONObject(jsonObj);
+                        if (item != null) {
+                            NotificationEntity entity = jsObjectToNotificationEntity(item);
+                            NotificationDatabase.getDatabase(getContext()).notificationDao().insert(entity);
+                            importedCount++;
+                        }
+                    } catch (JSONException e) {
+                        // Log individual item errors but continue processing
+                        android.util.Log.e("NotificationReader", "Error importing notification at index " + i, e);
                     }
                 }
-                call.resolve();
+                JSObject result = new JSObject();
+                result.put("imported", importedCount);
+                call.resolve(result);
             } catch (Exception e) {
                 call.reject("Error importing notifications", e);
             }
@@ -347,7 +387,7 @@ public class NotificationReaderPlugin extends Plugin {
         entity.largeIcon = obj.getString("largeIcon", "");
         entity.appIcon = obj.getString("appIcon", "");
         entity.category = obj.getString("category", "");
-        entity.style = obj.getString("style", "default");
+            entity.style = obj.getString("style", "default");
         entity.subText = obj.getString("subText", "");
         entity.infoText = obj.getString("infoText", "");
         entity.summaryText = obj.getString("summaryText", "");
@@ -446,6 +486,16 @@ public class NotificationReaderPlugin extends Plugin {
         }
         if (hasKey(fallback, key)) {
             return fallback.optBoolean(key);
+        }
+        return null;
+    }
+
+    private Long getLongOption(JSONObject primary, JSONObject fallback, String key) {
+        if (hasKey(primary, key)) {
+            return primary.optLong(key);
+        }
+        if (hasKey(fallback, key)) {
+            return fallback.optLong(key);
         }
         return null;
     }
