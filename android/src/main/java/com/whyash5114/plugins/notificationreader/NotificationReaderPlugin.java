@@ -16,6 +16,7 @@ import com.whyash5114.plugins.notificationreader.db.NotificationDatabase;
 import com.whyash5114.plugins.notificationreader.db.NotificationEntity;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -142,7 +143,7 @@ public class NotificationReaderPlugin extends Plugin {
                     args.add("%" + titleContainsInsensitive + "%");
                 }
 
-                JSONArray appNames = getJSONArrayOption(filterCopy, rootOptions, "appNames");
+                JSONArray appNames = getJSONArrayOption(filterCopy, rootOptions);
                 if (appNames != null && appNames.length() > 0) {
                     StringBuilder appNameCondition = new StringBuilder("appName IN (");
                     for (int i = 0; i < appNames.length(); i++) {
@@ -287,11 +288,9 @@ public class NotificationReaderPlugin extends Plugin {
                     try {
                         JSONObject jsonObj = notifications.getJSONObject(i);
                         JSObject item = JSObject.fromJSONObject(jsonObj);
-                        if (item != null) {
-                            NotificationEntity entity = jsObjectToNotificationEntity(item);
-                            NotificationDatabase.getDatabase(getContext()).notificationDao().insert(entity);
-                            importedCount++;
-                        }
+                        NotificationEntity entity = jsObjectToNotificationEntity(item);
+                        NotificationDatabase.getDatabase(getContext()).notificationDao().insert(entity);
+                        importedCount++;
                     } catch (JSONException e) {
                         // Log individual item errors but continue processing
                         android.util.Log.e("NotificationReader", "Error importing notification at index " + i, e);
@@ -378,9 +377,9 @@ public class NotificationReaderPlugin extends Plugin {
     private NotificationEntity jsObjectToNotificationEntity(JSObject obj) {
         NotificationEntity entity = new NotificationEntity();
 
-        entity.id = obj.getString("id", UUID.randomUUID().toString());
-        entity.appName = obj.getString("appName", "");
-        entity.packageName = obj.getString("packageName", "");
+        entity.id = Objects.requireNonNull(obj.getString("id", UUID.randomUUID().toString()));
+        entity.appName = Objects.requireNonNull(obj.getString("appName", ""));
+        entity.packageName = Objects.requireNonNull(obj.getString("packageName", ""));
         entity.title = obj.getString("title", "");
         entity.text = obj.getString("text", "");
         entity.postTime = obj.optLong("timestamp", 0L);
@@ -388,12 +387,12 @@ public class NotificationReaderPlugin extends Plugin {
         entity.largeIcon = obj.getString("largeIcon", "");
         entity.appIcon = obj.getString("appIcon", "");
         entity.category = obj.getString("category", "");
-        entity.style = obj.getString("style", "default");
+        entity.style = Objects.requireNonNull(obj.getString("style", "default"));
         entity.subText = obj.getString("subText", "");
         entity.infoText = obj.getString("infoText", "");
         entity.summaryText = obj.getString("summaryText", "");
         entity.groupKey = obj.getString("group", "");
-        entity.isGroupSummary = obj.getBoolean("isGroupSummary", false);
+        entity.isGroupSummary = Boolean.TRUE.equals(obj.getBoolean("isGroupSummary", false));
         entity.channelId = obj.getString("channelId", "");
 
         JSONArray actions = obj.optJSONArray("actions");
@@ -403,11 +402,11 @@ public class NotificationReaderPlugin extends Plugin {
             entity.actionsJson = "[]";
         }
 
-        entity.isOngoing = obj.getBoolean("isOngoing", false);
-        entity.autoCancel = obj.getBoolean("autoCancel", false);
-        entity.isLocalOnly = obj.getBoolean("isLocalOnly", false);
-        entity.priority = obj.getInteger("priority", 0);
-        entity.number = obj.getInteger("number", 0);
+        entity.isOngoing = Boolean.TRUE.equals(obj.getBoolean("isOngoing", false));
+        entity.autoCancel = Boolean.TRUE.equals(obj.getBoolean("autoCancel", false));
+        entity.isLocalOnly = Boolean.TRUE.equals(obj.getBoolean("isLocalOnly", false));
+        entity.priority = obj.getNonNullInteger("priority", 0);
+        entity.number = obj.getNonNullInteger("number", 0);
 
         // Style-specific fields
         entity.bigText = obj.getString("bigText", "");
@@ -422,7 +421,7 @@ public class NotificationReaderPlugin extends Plugin {
         }
 
         entity.conversationTitle = obj.getString("conversationTitle", "");
-        entity.isGroupConversation = obj.getBoolean("isGroupConversation", false);
+        entity.isGroupConversation = Boolean.TRUE.equals(obj.getBoolean("isGroupConversation", false));
 
         JSONArray messages = obj.optJSONArray("messages");
         if (messages != null) {
@@ -433,9 +432,9 @@ public class NotificationReaderPlugin extends Plugin {
 
         JSObject progressObj = obj.getJSObject("progress");
         if (progressObj != null) {
-            entity.progress = progressObj.getInteger("current", 0);
-            entity.progressMax = progressObj.getInteger("max", 0);
-            entity.progressIndeterminate = progressObj.getBoolean("indeterminate", false);
+            entity.progress = progressObj.getNonNullInteger("current", 0);
+            entity.progressMax = progressObj.getNonNullInteger("max", 0);
+            entity.progressIndeterminate = Boolean.TRUE.equals(progressObj.getBoolean("indeterminate", false));
         }
 
         entity.callerName = obj.getString("callerName", "");
@@ -465,20 +464,20 @@ public class NotificationReaderPlugin extends Plugin {
 
     private String getStringOption(JSONObject primary, JSONObject fallback, String key) {
         if (hasKey(primary, key)) {
-            return primary.optString(key, null);
+            return primary.optString(key);
         }
         if (hasKey(fallback, key)) {
-            return fallback.optString(key, null);
+            return fallback.optString(key);
         }
         return null;
     }
 
-    private JSONArray getJSONArrayOption(JSONObject primary, JSONObject fallback, String key) {
-        JSONArray primaryArray = primary != null ? primary.optJSONArray(key) : null;
+    private JSONArray getJSONArrayOption(JSONObject primary, JSONObject fallback) {
+        JSONArray primaryArray = primary != null ? primary.optJSONArray("appNames") : null;
         if (primaryArray != null) {
             return primaryArray;
         }
-        return fallback != null ? fallback.optJSONArray(key) : null;
+        return fallback != null ? fallback.optJSONArray("appNames") : null;
     }
 
     private Boolean getBooleanOption(JSONObject primary, JSONObject fallback, String key) {

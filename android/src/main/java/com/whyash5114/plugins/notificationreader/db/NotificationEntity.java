@@ -107,8 +107,8 @@ public class NotificationEntity {
         this.text = textChars != null ? textChars.toString() : null;
 
         this.postTime = sbn.getPostTime();
-        this.smallIcon = getSmallIconBase64(context, notification);
-        this.largeIcon = getLargeIconBase64(context, notification);
+        this.smallIcon = getSmallIconBase64(context, notification, this.packageName);
+        this.largeIcon = getLargeIconBase64(context, notification, this.packageName);
         this.appIcon = getAppIconBase64(context, sbn.getPackageName());
         this.category = notification.category;
         this.style = getStyleString(extras);
@@ -127,7 +127,7 @@ public class NotificationEntity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             this.channelId = notification.getChannelId();
         }
-        this.actionsJson = getActionsJson(context, notification);
+        this.actionsJson = getActionsJson(context, notification, this.packageName);
         this.isOngoing = (notification.flags & Notification.FLAG_ONGOING_EVENT) != 0;
         this.autoCancel = (notification.flags & Notification.FLAG_AUTO_CANCEL) != 0;
         this.isLocalOnly = (notification.flags & Notification.FLAG_LOCAL_ONLY) != 0;
@@ -164,14 +164,31 @@ public class NotificationEntity {
         return "default";
     }
 
-    private String getActionsJson(Context context, Notification notification) {
+    private String getActionsJson(Context context, Notification notification, String packageName) {
         JSArray actionsArray = new JSArray();
         if (notification.actions != null) {
+            Context packageContext;
+            try {
+                packageContext = context.createPackageContext(packageName, 0);
+            } catch (Exception e) {
+                packageContext = context;
+            }
             for (Notification.Action action : notification.actions) {
                 JSObject actionObj = new JSObject();
                 actionObj.put("title", action.title);
                 if (action.getIcon() != null) {
-                    actionObj.put("icon", drawableToBase64(action.getIcon().loadDrawable(context)));
+                    try {
+                        Drawable drawable = action.getIcon().loadDrawable(packageContext);
+                        actionObj.put("icon", drawableToBase64(drawable));
+                    } catch (Exception e) {
+                        // Try with original context as fallback
+                        try {
+                            Drawable drawable = action.getIcon().loadDrawable(context);
+                            actionObj.put("icon", drawableToBase64(drawable));
+                        } catch (Exception e2) {
+                            actionObj.put("icon", null);
+                        }
+                    }
                 } else {
                     actionObj.put("icon", null);
                 }
@@ -263,18 +280,58 @@ public class NotificationEntity {
         return messagesArray.toString();
     }
 
-    private String getSmallIconBase64(Context context, Notification notification) {
-        Icon icon = notification.getSmallIcon();
-        if (icon != null) {
-            return drawableToBase64(icon.loadDrawable(context));
+    private String getSmallIconBase64(Context context, Notification notification, String packageName) {
+        try {
+            Icon icon = notification.getSmallIcon();
+            if (icon != null) {
+                // Try loading with a context for the source package first
+                Context packageContext = context.createPackageContext(packageName, 0);
+                Drawable drawable = icon.loadDrawable(packageContext);
+                if (drawable != null) {
+                    return drawableToBase64(drawable);
+                }
+            }
+        } catch (Exception e) {
+            // Try with our context as fallback
+            try {
+                Icon icon = notification.getSmallIcon();
+                if (icon != null) {
+                    Drawable drawable = icon.loadDrawable(context);
+                    if (drawable != null) {
+                        return drawableToBase64(drawable);
+                    }
+                }
+            } catch (Exception e2) {
+                // Icon loading failed completely
+            }
         }
         return null;
     }
 
-    private String getLargeIconBase64(Context context, Notification notification) {
-        Icon icon = notification.getLargeIcon();
-        if (icon != null) {
-            return drawableToBase64(icon.loadDrawable(context));
+    private String getLargeIconBase64(Context context, Notification notification, String packageName) {
+        try {
+            Icon icon = notification.getLargeIcon();
+            if (icon != null) {
+                // Try loading with a context for the source package first
+                Context packageContext = context.createPackageContext(packageName, 0);
+                Drawable drawable = icon.loadDrawable(packageContext);
+                if (drawable != null) {
+                    return drawableToBase64(drawable);
+                }
+            }
+        } catch (Exception e) {
+            // Try with our context as fallback
+            try {
+                Icon icon = notification.getLargeIcon();
+                if (icon != null) {
+                    Drawable drawable = icon.loadDrawable(context);
+                    if (drawable != null) {
+                        return drawableToBase64(drawable);
+                    }
+                }
+            } catch (Exception e2) {
+                // Icon loading failed completely
+            }
         }
         return null;
     }
