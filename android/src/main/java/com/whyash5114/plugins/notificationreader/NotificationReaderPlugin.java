@@ -456,8 +456,8 @@ public class NotificationReaderPlugin extends Plugin {
         entity.isOngoing = Boolean.TRUE.equals(obj.getBoolean("isOngoing", false));
         entity.autoCancel = Boolean.TRUE.equals(obj.getBoolean("autoCancel", false));
         entity.isLocalOnly = Boolean.TRUE.equals(obj.getBoolean("isLocalOnly", false));
-        entity.priority = obj.getNonNullInteger("priority", 0);
-        entity.number = obj.getNonNullInteger("number", 0);
+        entity.priority = obj.getInteger("priority", 0);
+        entity.number = obj.getInteger("number", 0);
 
         // Style-specific fields
         entity.bigText = obj.getString("bigText", "");
@@ -483,8 +483,8 @@ public class NotificationReaderPlugin extends Plugin {
 
         JSObject progressObj = obj.getJSObject("progress");
         if (progressObj != null) {
-            entity.progress = progressObj.getNonNullInteger("current", 0);
-            entity.progressMax = progressObj.getNonNullInteger("max", 0);
+            entity.progress = progressObj.getInteger("current", 0);
+            entity.progressMax = progressObj.getInteger("max", 0);
             entity.progressIndeterminate = Boolean.TRUE.equals(progressObj.getBoolean("indeterminate", false));
         }
 
