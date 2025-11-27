@@ -426,6 +426,38 @@ export interface ImportNotificationsOptions {
   notifications: NotificationItem[];
 }
 
+/**
+ * Information about an installed application.
+ */
+export interface InstalledApp {
+  /**
+   * The package name of the app.
+   */
+  packageName: string;
+  /**
+   * The human-readable name of the app.
+   */
+  appName: string;
+  /**
+   * Base64-encoded PNG of the app's launcher icon.
+   */
+  appIcon?: string;
+  /**
+   * Whether the app is a system app.
+   */
+  isSystemApp: boolean;
+}
+
+/**
+ * Result returned by getInstalledApps.
+ */
+export interface GetInstalledAppsResult {
+  /**
+   * Array of installed applications with their metadata.
+   */
+  apps: InstalledApp[];
+}
+
 export interface NotificationReaderPlugin extends Plugin {
   /**
    * Gets all active notifications from the notification listener service.
@@ -531,6 +563,23 @@ export interface NotificationReaderPlugin extends Plugin {
    * ```
    */
   importNotifications(options: ImportNotificationsOptions): Promise<void>;
+
+  /**
+   * Retrieves a list of all installed applications on the device.
+   * Returns app name, package name, app icon, and whether it's a system app.
+   *
+   * @returns Promise resolving with the list of installed apps
+   * @since 1.0.0
+   * @platform Android
+   *
+   * @example
+   * ```typescript
+   * const { apps } = await NotificationReader.getInstalledApps();
+   * const userApps = apps.filter(app => !app.isSystemApp);
+   * console.log('User apps:', userApps.map(app => app.appName));
+   * ```
+   */
+  getInstalledApps(): Promise<GetInstalledAppsResult>;
 
   /**
    * Listen for notifications that are posted while the listener service is running.

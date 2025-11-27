@@ -1,10 +1,18 @@
 package com.whyash5114.plugins.notificationreader;
 
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.provider.Settings;
 import android.service.notification.StatusBarNotification;
+import android.util.Base64;
 import androidx.activity.result.ActivityResult;
 import androidx.sqlite.db.SimpleSQLiteQuery;
+import java.io.ByteArrayOutputStream;
 import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
@@ -262,6 +270,49 @@ public class NotificationReaderPlugin extends Plugin {
     }
 
     /**
+     * Retrieves a list of all installed applications with their metadata.
+     * Returns app name, package name, and base64-encoded app icon for each app.
+     *
+     * @param call PluginCall to resolve with the list of installed apps
+     */
+    @SuppressWarnings("unused")
+    @PluginMethod
+    public void getInstalledApps(PluginCall call) {
+        new Thread(() -> {
+            try {
+                PackageManager pm = getContext().getPackageManager();
+                List<ApplicationInfo> apps = pm.getInstalledApplications(PackageManager.GET_META_DATA);
+                JSArray appsArray = new JSArray();
+
+                for (ApplicationInfo appInfo : apps) {
+                    JSObject appObj = new JSObject();
+                    appObj.put("packageName", appInfo.packageName);
+                    appObj.put("appName", pm.getApplicationLabel(appInfo).toString());
+
+                    try {
+                        Drawable icon = pm.getApplicationIcon(appInfo);
+                        appObj.put("appIcon", drawableToBase64(icon));
+                    } catch (Exception e) {
+                        appObj.put("appIcon", null);
+                    }
+
+                    // Check if it's a system app
+                    boolean isSystemApp = (appInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0;
+                    appObj.put("isSystemApp", isSystemApp);
+
+                    appsArray.put(appObj);
+                }
+
+                JSObject result = new JSObject();
+                result.put("apps", appsArray);
+                call.resolve(result);
+            } catch (Exception e) {
+                call.reject("Error getting installed apps", e);
+            }
+        }).start();
+    }
+
+    /**
      * Imports an array of notifications into the database.
      * This method is useful for restoring previously exported notifications,
      * migrating data from another source, or bulk-importing notification data.
@@ -498,5 +549,29 @@ public class NotificationReaderPlugin extends Plugin {
             return fallback.optLong(key);
         }
         return null;
+    }
+
+    private String drawableToBase64(Drawable drawable) {
+        if (drawable == null) return null;
+        Bitmap bitmap;
+        if (drawable instanceof BitmapDrawable) {
+            bitmap = ((BitmapDrawable) drawable).getBitmap();
+        } else {
+            int width = drawable.getIntrinsicWidth() > 0 ? drawable.getIntrinsicWidth() : 96;
+            int height = drawable.getIntrinsicHeight() > 0 ? drawable.getIntrinsicHeight() : 96;
+            bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(bitmap);
+            drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+            drawable.draw(canvas);
+        }
+        return bitmapToBase64(bitmap);
+    }
+
+    private String bitmapToBase64(Bitmap bitmap) {
+        if (bitmap == null) return null;
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream);
+        byte[] byteArray = outputStream.toByteArray();
+        return Base64.encodeToString(byteArray, Base64.NO_WRAP);
     }
 }

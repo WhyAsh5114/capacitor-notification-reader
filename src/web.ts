@@ -2,6 +2,7 @@ import { WebPlugin } from '@capacitor/core';
 
 import type {
   GetActiveNotificationsResult,
+  GetInstalledAppsResult,
   GetNotificationsOptions,
   GetNotificationsResult,
   ImportNotificationsOptions,
@@ -28,6 +29,9 @@ export class NotificationReaderWeb extends WebPlugin implements NotificationRead
     throw this.unimplemented('Not implemented on web.');
   }
   async getTotalCount(): Promise<{ count: number }> {
+    throw this.unimplemented('Not implemented on web.');
+  }
+  async getInstalledApps(): Promise<GetInstalledAppsResult> {
     throw this.unimplemented('Not implemented on web.');
   }
 }

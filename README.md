@@ -183,6 +183,7 @@ For more detailed examples, see [TYPE_USAGE_EXAMPLES.md](TYPE_USAGE_EXAMPLES.md)
 * [`deleteAllNotifications()`](#deleteallnotifications)
 * [`getTotalCount()`](#gettotalcount)
 * [`importNotifications(...)`](#importnotifications)
+* [`getInstalledApps()`](#getinstalledapps)
 * [`addListener('notificationPosted', ...)`](#addlistenernotificationposted-)
 * [Interfaces](#interfaces)
 * [Type Aliases](#type-aliases)
@@ -307,6 +308,22 @@ notification with the same ID already exists, it will be updated.
 | Param         | Type                                                                              | Description                                              |
 | ------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------- |
 | **`options`** | <code><a href="#importnotificationsoptions">ImportNotificationsOptions</a></code> | - Object containing the array of notifications to import |
+
+**Since:** 1.0.0
+
+--------------------
+
+
+### getInstalledApps()
+
+```typescript
+getInstalledApps() => Promise<GetInstalledAppsResult>
+```
+
+Retrieves a list of all installed applications on the device.
+Returns app name, package name, app icon, and whether it's a system app.
+
+**Returns:** <code>Promise&lt;<a href="#getinstalledappsresult">GetInstalledAppsResult</a>&gt;</code>
 
 **Since:** 1.0.0
 
@@ -500,6 +517,27 @@ Options for importNotifications.
 | Prop                | Type                            | Description                                                                                                                                                       |
 | ------------------- | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **`notifications`** | <code>NotificationItem[]</code> | Array of notification items to import into the database. Each notification should conform to the <a href="#notificationitem">NotificationItem</a> type structure. |
+
+
+#### GetInstalledAppsResult
+
+Result returned by getInstalledApps.
+
+| Prop       | Type                        | Description                                          |
+| ---------- | --------------------------- | ---------------------------------------------------- |
+| **`apps`** | <code>InstalledApp[]</code> | Array of installed applications with their metadata. |
+
+
+#### InstalledApp
+
+Information about an installed application.
+
+| Prop              | Type                 | Description                                    |
+| ----------------- | -------------------- | ---------------------------------------------- |
+| **`packageName`** | <code>string</code>  | The package name of the app.                   |
+| **`appName`**     | <code>string</code>  | The human-readable name of the app.            |
+| **`appIcon`**     | <code>string</code>  | Base64-encoded PNG of the app's launcher icon. |
+| **`isSystemApp`** | <code>boolean</code> | Whether the app is a system app.               |
 
 
 #### PluginListenerHandle
