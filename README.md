@@ -182,6 +182,7 @@ For more detailed examples, see [TYPE_USAGE_EXAMPLES.md](TYPE_USAGE_EXAMPLES.md)
 * [`getNotifications(...)`](#getnotifications)
 * [`deleteAllNotifications()`](#deleteallnotifications)
 * [`getTotalCount()`](#gettotalcount)
+* [`getDatabaseSize()`](#getdatabasesize)
 * [`importNotifications(...)`](#importnotifications)
 * [`getInstalledApps()`](#getinstalledapps)
 * [`getConfig()`](#getconfig)
@@ -288,6 +289,23 @@ Gets the total count of notifications stored in the database.
 This count includes all notifications regardless of their status or type.
 
 **Returns:** <code>Promise&lt;{ count: number; }&gt;</code>
+
+**Since:** 1.0.0
+
+--------------------
+
+
+### getDatabaseSize()
+
+```typescript
+getDatabaseSize() => Promise<{ sizeBytes: number; sizeMB: number; }>
+```
+
+Gets the current database size in bytes consumed by stored notifications.
+This can be used to monitor storage usage and determine if you're approaching
+your configured storage limit.
+
+**Returns:** <code>Promise&lt;{ sizeBytes: number; sizeMB: number; }&gt;</code>
 
 **Since:** 1.0.0
 

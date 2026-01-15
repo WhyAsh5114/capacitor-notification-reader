@@ -542,6 +542,23 @@ export interface NotificationReaderPlugin extends Plugin {
   getTotalCount(): Promise<{ count: number }>;
 
   /**
+   * Gets the current database size in bytes consumed by stored notifications.
+   * This can be used to monitor storage usage and determine if you're approaching
+   * your configured storage limit.
+   *
+   * @returns Promise resolving with an object containing the size in bytes and megabytes
+   * @since 1.0.0
+   * @platform Android
+   *
+   * @example
+   * ```typescript
+   * const { sizeBytes, sizeMB } = await NotificationReader.getDatabaseSize();
+   * console.log(`Database size: ${sizeMB.toFixed(2)} MB (${sizeBytes} bytes)`);
+   * ```
+   */
+  getDatabaseSize(): Promise<{ sizeBytes: number; sizeMB: number }>;
+
+  /**
    * Imports an array of notifications into the database.
    * This method is useful for restoring previously exported notifications,
    * migrating data from another source, or bulk-importing notification data.

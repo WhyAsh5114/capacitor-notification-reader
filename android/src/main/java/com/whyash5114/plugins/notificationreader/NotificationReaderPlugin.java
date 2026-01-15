@@ -494,6 +494,32 @@ public class NotificationReaderPlugin extends Plugin {
     }
 
     /**
+     * Gets the current database size consumed by notifications.
+     */
+    @SuppressWarnings("unused")
+    @PluginMethod
+    public void getDatabaseSize(PluginCall call) {
+        new Thread(() -> {
+            try {
+                Long sizeBytes = NotificationDatabase.getDatabase(getContext()).notificationDao().getDatabaseSizeBytes();
+                JSObject ret = new JSObject();
+                
+                if (sizeBytes != null) {
+                    ret.put("sizeBytes", sizeBytes);
+                    ret.put("sizeMB", sizeBytes / (1024.0 * 1024.0));
+                } else {
+                    ret.put("sizeBytes", 0);
+                    ret.put("sizeMB", 0.0);
+                }
+                
+                call.resolve(ret);
+            } catch (Exception e) {
+                call.reject("Failed to get database size", e);
+            }
+        }).start();
+    }
+
+    /**
      * Gets the current configuration for the notification reader plugin.
      */
     @SuppressWarnings("unused")
