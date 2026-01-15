@@ -184,6 +184,8 @@ For more detailed examples, see [TYPE_USAGE_EXAMPLES.md](TYPE_USAGE_EXAMPLES.md)
 * [`getTotalCount()`](#gettotalcount)
 * [`importNotifications(...)`](#importnotifications)
 * [`getInstalledApps()`](#getinstalledapps)
+* [`getConfig()`](#getconfig)
+* [`setConfig(...)`](#setconfig)
 * [`addListener('notificationPosted', ...)`](#addlistenernotificationposted-)
 * [Interfaces](#interfaces)
 * [Type Aliases](#type-aliases)
@@ -324,6 +326,39 @@ Retrieves a list of all installed applications on the device.
 Returns app name, package name, app icon, and whether it's a system app.
 
 **Returns:** <code>Promise&lt;<a href="#getinstalledappsresult">GetInstalledAppsResult</a>&gt;</code>
+
+**Since:** 1.0.0
+
+--------------------
+
+
+### getConfig()
+
+```typescript
+getConfig() => Promise<NotificationReaderConfig>
+```
+
+Gets the current configuration for the notification reader plugin.
+
+**Returns:** <code>Promise&lt;<a href="#notificationreaderconfig">NotificationReaderConfig</a>&gt;</code>
+
+**Since:** 1.0.0
+
+--------------------
+
+
+### setConfig(...)
+
+```typescript
+setConfig(config: NotificationReaderConfig) => Promise<void>
+```
+
+Sets the configuration for the notification reader plugin.
+Changes take effect immediately for new notifications.
+
+| Param        | Type                                                                          | Description                    |
+| ------------ | ----------------------------------------------------------------------------- | ------------------------------ |
+| **`config`** | <code><a href="#notificationreaderconfig">NotificationReaderConfig</a></code> | - Configuration options to set |
 
 **Since:** 1.0.0
 
@@ -538,6 +573,16 @@ Information about an installed application.
 | **`appName`**     | <code>string</code>  | The human-readable name of the app.            |
 | **`appIcon`**     | <code>string</code>  | Base64-encoded PNG of the app's launcher icon. |
 | **`isSystemApp`** | <code>boolean</code> | Whether the app is a system app.               |
+
+
+#### NotificationReaderConfig
+
+Configuration options for the notification reader plugin.
+
+| Prop                           | Type                 | Description                                                                                                                                                                      | Default                |
+| ------------------------------ | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
+| **`logProgressNotifications`** | <code>boolean</code> | Whether to log progress notifications (e.g., download/upload progress). When false, progress notifications will be filtered out and not stored.                                  | <code>true</code>      |
+| **`storageLimit`**             | <code>number</code>  | Storage limit for notifications in megabytes (MB). When the database exceeds this limit, older notifications will be removed using FIFO. Set to undefined for unlimited storage. | <code>undefined</code> |
 
 
 #### PluginListenerHandle

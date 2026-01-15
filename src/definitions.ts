@@ -458,6 +458,25 @@ export interface GetInstalledAppsResult {
   apps: InstalledApp[];
 }
 
+/**
+ * Configuration options for the notification reader plugin.
+ */
+export interface NotificationReaderConfig {
+  /**
+   * Whether to log progress notifications (e.g., download/upload progress).
+   * When false, progress notifications will be filtered out and not stored.
+   * @default true
+   */
+  logProgressNotifications?: boolean;
+  /**
+   * Storage limit for notifications in megabytes (MB).
+   * When the database exceeds this limit, older notifications will be removed using FIFO.
+   * Set to undefined for unlimited storage.
+   * @default undefined
+   */
+  storageLimit?: number;
+}
+
 export interface NotificationReaderPlugin extends Plugin {
   /**
    * Gets all active notifications from the notification listener service.
@@ -580,6 +599,52 @@ export interface NotificationReaderPlugin extends Plugin {
    * ```
    */
   getInstalledApps(): Promise<GetInstalledAppsResult>;
+
+  /**
+   * Gets the current configuration for the notification reader plugin.
+   *
+   * @returns Promise resolving with the current configuration
+   * @since 1.0.0
+   * @platform Android
+   *
+   * @example
+   * ```typescript
+   * const config = await NotificationReader.getConfig();
+   * console.log('Log progress notifications:', config.logProgressNotifications);
+   * console.log('Storage limit:', config.storageLimit);
+   * ```
+   */
+  getConfig(): Promise<NotificationReaderConfig>;
+
+  /**
+   * Sets the configuration for the notification reader plugin.
+   * Changes take effect immediately for new notifications.
+   *
+   * @param config - Configuration options to set
+   * @returns Promise resolving when configuration has been updated
+   * @since 1.0.0
+   * @platform Android
+   *
+   * @example
+   * ```typescript
+   * // Disable logging of progress notifications
+   * await NotificationReader.setConfig({
+   *   logProgressNotifications: false
+   * });
+   *
+   * // Set storage limit to 50 MB
+   * await NotificationReader.setConfig({
+   *   storageLimit: 50
+   * });
+   *
+   * // Set both options
+   * await NotificationReader.setConfig({
+   *   logProgressNotifications: true,
+   *   storageLimit: 100
+   * });
+   * ```
+   */
+  setConfig(config: NotificationReaderConfig): Promise<void>;
 
   /**
    * Listen for notifications that are posted while the listener service is running.

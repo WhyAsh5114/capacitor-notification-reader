@@ -6,6 +6,7 @@ import type {
   GetNotificationsOptions,
   GetNotificationsResult,
   ImportNotificationsOptions,
+  NotificationReaderConfig,
   NotificationReaderPlugin,
 } from './definitions';
 
@@ -32,6 +33,12 @@ export class NotificationReaderWeb extends WebPlugin implements NotificationRead
     throw this.unimplemented('Not implemented on web.');
   }
   async getInstalledApps(): Promise<GetInstalledAppsResult> {
+    throw this.unimplemented('Not implemented on web.');
+  }
+  async getConfig(): Promise<NotificationReaderConfig> {
+    throw this.unimplemented('Not implemented on web.');
+  }
+  async setConfig(_config: NotificationReaderConfig): Promise<void> {
     throw this.unimplemented('Not implemented on web.');
   }
 }

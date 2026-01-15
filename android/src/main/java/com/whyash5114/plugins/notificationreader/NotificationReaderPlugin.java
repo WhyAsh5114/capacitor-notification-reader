@@ -493,6 +493,57 @@ public class NotificationReaderPlugin extends Plugin {
         return entity;
     }
 
+    /**
+     * Gets the current configuration for the notification reader plugin.
+     */
+    @SuppressWarnings("unused")
+    @PluginMethod
+    public void getConfig(PluginCall call) {
+        NotificationReaderConfig config = new NotificationReaderConfig(getContext());
+        
+        JSObject ret = new JSObject();
+        ret.put("logProgressNotifications", config.shouldLogProgressNotifications());
+        
+        float storageLimit = config.getStorageLimit();
+        if (storageLimit > 0) {
+            ret.put("storageLimit", storageLimit);
+        } else {
+            ret.put("storageLimit", (Object) null);
+        }
+        
+        call.resolve(ret);
+    }
+
+    /**
+     * Sets the configuration for the notification reader plugin.
+     */
+    @SuppressWarnings("unused")
+    @PluginMethod
+    public void setConfig(PluginCall call) {
+        NotificationReaderConfig config = new NotificationReaderConfig(getContext());
+        
+        Boolean logProgressNotifications = call.getBoolean("logProgressNotifications");
+        if (logProgressNotifications != null) {
+            config.setLogProgressNotifications(logProgressNotifications);
+        }
+        
+        // Handle storageLimit - can be a number or null/undefined
+        if (call.getData().has("storageLimit")) {
+            if (call.getData().isNull("storageLimit")) {
+                config.setStorageLimit(-1f);
+            } else {
+                Float storageLimit = call.getFloat("storageLimit");
+                if (storageLimit != null) {
+                    config.setStorageLimit(storageLimit);
+                } else {
+                    config.setStorageLimit(-1f);
+                }
+            }
+        }
+        
+        call.resolve();
+    }
+
     private boolean isNotificationAccessEnabled() {
         String enabled = Settings.Secure.getString(getContext().getContentResolver(), "enabled_notification_listeners");
         return enabled != null && enabled.contains(getContext().getPackageName());
