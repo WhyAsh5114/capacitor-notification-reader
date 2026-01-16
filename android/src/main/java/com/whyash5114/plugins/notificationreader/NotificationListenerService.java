@@ -80,7 +80,7 @@ public class NotificationListenerService extends android.service.notification.No
     }
 
     /**
-     * Checks if a notification should be logged based on the configuration.
+     * Checks if a notification should be logged based on the configuration filters.
      * @param sbn StatusBarNotification to check
      * @return true if the notification should be logged, false otherwise
      */
@@ -89,12 +89,16 @@ public class NotificationListenerService extends android.service.notification.No
             config = new NotificationReaderConfig(getApplicationContext());
         }
 
-        // Check if we should filter out progress notifications
-        if (!config.shouldLogProgressNotifications()) {
-            Notification notification = sbn.getNotification();
-            if (notification != null && Notification.CATEGORY_PROGRESS.equals(notification.category)) {
-                return false;
-            }
+        Notification notification = sbn.getNotification();
+
+        // Filter out ongoing notifications if configured
+        if (config.shouldFilterOngoing() && notification != null && (notification.flags & Notification.FLAG_ONGOING_EVENT) != 0) {
+            return false;
+        }
+
+        // Filter out transport category notifications if configured
+        if (config.shouldFilterTransport() && notification != null && Notification.CATEGORY_TRANSPORT.equals(notification.category)) {
+            return false;
         }
 
         return true;

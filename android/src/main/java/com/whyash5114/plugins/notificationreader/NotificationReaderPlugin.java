@@ -528,7 +528,8 @@ public class NotificationReaderPlugin extends Plugin {
         NotificationReaderConfig config = new NotificationReaderConfig(getContext());
         
         JSObject ret = new JSObject();
-        ret.put("logProgressNotifications", config.shouldLogProgressNotifications());
+        ret.put("filterOngoing", config.shouldFilterOngoing());
+        ret.put("filterTransport", config.shouldFilterTransport());
         
         float storageLimit = config.getStorageLimit();
         if (storageLimit > 0) {
@@ -548,9 +549,14 @@ public class NotificationReaderPlugin extends Plugin {
     public void setConfig(PluginCall call) {
         NotificationReaderConfig config = new NotificationReaderConfig(getContext());
         
-        Boolean logProgressNotifications = call.getBoolean("logProgressNotifications");
-        if (logProgressNotifications != null) {
-            config.setLogProgressNotifications(logProgressNotifications);
+        Boolean filterOngoing = call.getBoolean("filterOngoing");
+        if (filterOngoing != null) {
+            config.setFilterOngoing(filterOngoing);
+        }
+        
+        Boolean filterTransport = call.getBoolean("filterTransport");
+        if (filterTransport != null) {
+            config.setFilterTransport(filterTransport);
         }
         
         // Handle storageLimit - can be a number or null/undefined

@@ -463,11 +463,17 @@ export interface GetInstalledAppsResult {
  */
 export interface NotificationReaderConfig {
   /**
-   * Whether to log progress notifications (e.g., download/upload progress).
-   * When false, progress notifications will be filtered out and not stored.
+   * Whether to filter out ongoing (non-dismissible) notifications.
+   * When true, ongoing notifications will be filtered out and not stored.
    * @default true
    */
-  logProgressNotifications?: boolean;
+  filterOngoing?: boolean;
+  /**
+   * Whether to filter out transport category notifications.
+   * When true, notifications with category 'transport' will be filtered out and not stored.
+   * @default true
+   */
+  filterTransport?: boolean;
   /**
    * Storage limit for notifications in megabytes (MB).
    * When the database exceeds this limit, older notifications will be removed using FIFO.

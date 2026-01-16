@@ -597,10 +597,11 @@ Information about an installed application.
 
 Configuration options for the notification reader plugin.
 
-| Prop                           | Type                 | Description                                                                                                                                                                      | Default                |
-| ------------------------------ | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
-| **`logProgressNotifications`** | <code>boolean</code> | Whether to log progress notifications (e.g., download/upload progress). When false, progress notifications will be filtered out and not stored.                                  | <code>true</code>      |
-| **`storageLimit`**             | <code>number</code>  | Storage limit for notifications in megabytes (MB). When the database exceeds this limit, older notifications will be removed using FIFO. Set to undefined for unlimited storage. | <code>undefined</code> |
+| Prop                  | Type                 | Description                                                                                                                                                                      | Default                |
+| --------------------- | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
+| **`filterOngoing`**   | <code>boolean</code> | Whether to filter out ongoing (non-dismissible) notifications. When true, ongoing notifications will be filtered out and not stored.                                             | <code>true</code>      |
+| **`filterTransport`** | <code>boolean</code> | Whether to filter out transport category notifications. When true, notifications with category 'transport' will be filtered out and not stored.                                  | <code>true</code>      |
+| **`storageLimit`**    | <code>number</code>  | Storage limit for notifications in megabytes (MB). When the database exceeds this limit, older notifications will be removed using FIFO. Set to undefined for unlimited storage. | <code>undefined</code> |
 
 
 #### PluginListenerHandle

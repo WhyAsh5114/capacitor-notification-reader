@@ -5,16 +5,18 @@ import android.content.SharedPreferences;
 
 /**
  * Configuration manager for NotificationReader plugin.
- * Handles reading and writing configuration options like logProgressNotifications and storageLimit.
+ * Handles reading and writing configuration options like filterOngoing, filterTransport and storageLimit.
  */
 public class NotificationReaderConfig {
 
     private static final String PREFS_NAME = "NotificationReaderConfig";
-    private static final String PREF_LOG_PROGRESS_NOTIFICATIONS = "log_progress_notifications";
+    private static final String PREF_FILTER_ONGOING = "filter_ongoing";
+    private static final String PREF_FILTER_TRANSPORT = "filter_transport";
     private static final String PREF_STORAGE_LIMIT = "storage_limit";
 
     // Default values
-    private static final boolean DEFAULT_LOG_PROGRESS_NOTIFICATIONS = true;
+    private static final boolean DEFAULT_FILTER_ONGOING = true; // Filter out ongoing notifications by default
+    private static final boolean DEFAULT_FILTER_TRANSPORT = true; // Filter out transport category by default
     private static final float DEFAULT_STORAGE_LIMIT = -1f; // -1 means unlimited
 
     private final SharedPreferences prefs;
@@ -24,19 +26,35 @@ public class NotificationReaderConfig {
     }
 
     /**
-     * Gets whether progress notifications should be logged.
-     * @return true if progress notifications should be logged (default), false otherwise
+     * Gets whether ongoing (non-dismissible) notifications should be filtered out.
+     * @return true if ongoing notifications should be filtered out (default), false otherwise
      */
-    public boolean shouldLogProgressNotifications() {
-        return prefs.getBoolean(PREF_LOG_PROGRESS_NOTIFICATIONS, DEFAULT_LOG_PROGRESS_NOTIFICATIONS);
+    public boolean shouldFilterOngoing() {
+        return prefs.getBoolean(PREF_FILTER_ONGOING, DEFAULT_FILTER_ONGOING);
     }
 
     /**
-     * Sets whether progress notifications should be logged.
-     * @param enabled true to log progress notifications, false to filter them out
+     * Sets whether ongoing (non-dismissible) notifications should be filtered out.
+     * @param enabled true to filter out ongoing notifications, false to log them
      */
-    public void setLogProgressNotifications(boolean enabled) {
-        prefs.edit().putBoolean(PREF_LOG_PROGRESS_NOTIFICATIONS, enabled).apply();
+    public void setFilterOngoing(boolean enabled) {
+        prefs.edit().putBoolean(PREF_FILTER_ONGOING, enabled).apply();
+    }
+
+    /**
+     * Gets whether transport category notifications should be filtered out.
+     * @return true if transport notifications should be filtered out (default), false otherwise
+     */
+    public boolean shouldFilterTransport() {
+        return prefs.getBoolean(PREF_FILTER_TRANSPORT, DEFAULT_FILTER_TRANSPORT);
+    }
+
+    /**
+     * Sets whether transport category notifications should be filtered out.
+     * @param enabled true to filter out transport notifications, false to log them
+     */
+    public void setFilterTransport(boolean enabled) {
+        prefs.edit().putBoolean(PREF_FILTER_TRANSPORT, enabled).apply();
     }
 
     /**
