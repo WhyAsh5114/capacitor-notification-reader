@@ -478,7 +478,7 @@ export interface NotificationReaderConfig {
    * Storage limit for notifications in megabytes (MB).
    * When the database exceeds this limit, older notifications will be removed using FIFO.
    * Set to undefined for unlimited storage.
-   * @default undefined
+   * @default 500
    */
   storageLimit?: number;
 }

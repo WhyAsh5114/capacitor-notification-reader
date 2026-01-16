@@ -17,7 +17,7 @@ public class NotificationReaderConfig {
     // Default values
     private static final boolean DEFAULT_FILTER_ONGOING = true; // Filter out ongoing notifications by default
     private static final boolean DEFAULT_FILTER_TRANSPORT = true; // Filter out transport category by default
-    private static final float DEFAULT_STORAGE_LIMIT = -1f; // -1 means unlimited
+    private static final float DEFAULT_STORAGE_LIMIT = 500f; // 500 MB default
 
     private final SharedPreferences prefs;
 
